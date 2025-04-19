@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '/api', // Убедитесь, что baseURL указывает на ваш API
+    baseURL: '/api', // Ensure baseURL points to your API prefix correctly
     headers: { 'Content-Type': 'application/json' }
 });
 

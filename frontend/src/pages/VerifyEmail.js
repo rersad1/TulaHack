@@ -47,6 +47,7 @@ function VerifyEmail() {
     return (
         <div>
             <h2>Статус подтверждения Email</h2>
+            {/* Сообщения уже на русском */}
             {verificationStatus === 'pending' && <p>{message}</p>}
             {verificationStatus === 'success' && <p style={{ color: 'green' }}>{message}</p>}
             {verificationStatus === 'error' && <p style={{ color: 'red' }}>{message}</p>}
