@@ -27,10 +27,16 @@ function App() {
 
     // Redirect logged-in users trying to access public pages to their specific dashboard
     useEffect(() => {
+        // Добавим лог для отладки внутри useEffect
+        console.log("App.js useEffect Check: accessToken:", !!accessToken, "pathname:", location.pathname);
+        console.log("App.js useEffect Check: userRole from localStorage:", localStorage.getItem('userRole')); // Проверяем сырое значение
+        console.log("App.js useEffect Check: Calculated dashboardPath:", dashboardPath);
+
         if (accessToken && ['/', '/choose-role', '/login', '/register'].includes(location.pathname)) {
+            console.log(`App.js useEffect: Redirecting logged-in user from ${location.pathname} to ${dashboardPath}`);
             navigate(dashboardPath, { replace: true }); // Redirect to specific dashboard
         }
-    }, [accessToken, location.pathname, navigate, dashboardPath, userRole]);
+    }, [accessToken, location.pathname, navigate, dashboardPath, userRole]); // userRole добавлен в зависимости, чтобы useEffect перезапускался при его изменении
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
