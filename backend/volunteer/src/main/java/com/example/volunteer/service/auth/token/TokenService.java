@@ -83,14 +83,14 @@ public class TokenService {
      * @return true, если токен истек или время создания не задано, иначе false.
      */
     // Принимаем Instant в качестве параметра
-    public boolean isTokenExpired(Instant tokenCreatedAt) { // <<< Изменен тип параметра
+    public boolean isTokenExpired(Instant tokenCreatedAt) {
         if (tokenCreatedAt == null) {
             return true;
         }
 
         // Рассчитываем время истечения, добавляя минуты к Instant
-        Instant expirationTime = tokenCreatedAt.plus(TOKEN_EXPIRATION_MINUTES, ChronoUnit.MINUTES); // <<< Изменено
+        Instant expirationTime = tokenCreatedAt.plus(TOKEN_EXPIRATION_MINUTES, ChronoUnit.MINUTES);
         // Сравниваем текущий момент времени (UTC) с временем истечения
-        return Instant.now().isAfter(expirationTime); // <<< Изменено
+        return Instant.now().isAfter(expirationTime);
     }
 }

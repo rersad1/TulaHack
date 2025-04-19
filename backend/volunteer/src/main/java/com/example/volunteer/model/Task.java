@@ -1,7 +1,11 @@
 package com.example.volunteer.model;
 
+import com.example.volunteer.model.auth.User;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -33,4 +37,10 @@ public class Task {
 
     private Integer rating;        
     private String userComment;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "task_responses",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> responders = new HashSet<>();
 }

@@ -12,6 +12,11 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
+configurations {
+  compileOnly {
+    extendsFrom(configurations.annotationProcessor.get())
+  }
+}
 
 repositories {
     mavenCentral()
@@ -21,6 +26,8 @@ dependencies {
     // --- Core Spring ---
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     // --- DB ---
     runtimeOnly("com.h2database:h2") // H2 для разработки и тестов
