@@ -4,6 +4,7 @@ package com.bubla.model;
 
 
 
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "ChatMessage")
 public class ChatMessage {
     @Id
     private String id;
