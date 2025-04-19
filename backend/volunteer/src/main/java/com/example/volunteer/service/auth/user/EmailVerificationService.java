@@ -17,8 +17,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailVerificationService {
 
-    @Value("${app.base-url}${app.email-verification.path}")
-    private String emailVerificationUrlBase;
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
+
+    @Value("${app.frontend.email-verification.path}")
+    private String frontendVerificationPath;
 
     @Autowired
     private UserRepository userRepository;
@@ -32,41 +35,47 @@ public class EmailVerificationService {
     /**
      * Отправляет письмо с ссылкой для верификации email пользователя.
      * Использует существующий токен пользователя или генерирует новый.
+     * Ссылка ведет на фронтенд.
      *
      * @param user Пользователь, которому нужно отправить письмо.
      */
     public void sendVerificationEmail(User user) {
         // Используем существующий токен или создаем новый, если он отсутствует
         String token = user.getAuthToken();
-        if (token == null) {
-            token = tokenService.generateToken(user);
+        if (token == null || tokenService.isTokenExpired(user.getTokenCreatedAt())) { // Проверяем и на истечение срока
+            token = tokenService.generateToken(user); // Генерируем новый, если старый истек или отсутствует
         }
 
-        String verificationLink = emailVerificationUrlBase + token;
+        // Формируем ссылку на фронтенд
+        String verificationLink = frontendBaseUrl + frontendVerificationPath + "/" + token;
         authEmailService.sendRegistrationLink(user.getEmail(), verificationLink);
     }
 
     /**
      * Верифицирует email пользователя по предоставленному токену.
      * Активирует учетную запись пользователя, если токен валиден и не истек.
+     * Этот метод вызывается API контроллером, когда фронтенд отправляет токен.
      *
      * @param token Токен верификации.
      * @throws InvalidAuthToken      если токен не найден или недействителен.
      * @throws TokenExpiredException если срок действия токена истек.
      */
     public void verifyEmail(String token) {
+        // Удаляем возможные кавычки, если они передаются
         token = token.replace("\"", "");
 
-        User user = userRepository.findByAuthToken(token).orElseThrow(() -> new InvalidAuthToken());
+        User user = userRepository.findByAuthToken(token).orElseThrow(InvalidAuthToken::new);
 
         // Проверка срока действия токена
         if (tokenService.isTokenExpired(user.getTokenCreatedAt())) {
-            tokenService.clearToken(user);
+            // Можно не удалять токен сразу, а дать возможность переотправить письмо
+            // tokenService.clearToken(user);
             throw new TokenExpiredException();
         }
 
-        // Активируем учетную запись пользователя
+        // Активируем учетную запись пользователя и очищаем токен
         user.setEnabled(true);
+        tokenService.clearToken(user); // Очищаем токен после успешной верификации
         userRepository.save(user);
     }
 
@@ -79,16 +88,17 @@ public class EmailVerificationService {
      *                          подтвержден.
      */
     public void resendVerificationEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден")); // Используйте более специфичное
+                                                                                    // исключение, если нужно
 
         if (Boolean.TRUE.equals(user.getEnabled())) {
-            throw new RuntimeException("Email уже подтвержден");
+            throw new RuntimeException("Email уже подтвержден"); // Используйте более специфичное исключение
         }
 
-        // Очищаем старый токен и создаем новый
-        tokenService.clearToken(user);
+        // Генерируем новый токен (старый будет перезаписан)
         tokenService.generateToken(user);
 
-        sendVerificationEmail(user);
+        sendVerificationEmail(user); // Отправляем письмо с новым токеном и ссылкой на фронтенд
     }
 }
