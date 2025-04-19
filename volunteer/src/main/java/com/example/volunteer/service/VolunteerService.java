@@ -19,13 +19,13 @@ public class VolunteerService {
         return volunteerRepository.save(volunteer);
     }
 
-    public Optional<Volunteer> updateVolunteer(String email, Volunteer updatedVolunteer) {
-        return volunteerRepository.findById(email).map(existing -> {
-            existing.setFirstName(updatedVolunteer.getFirstName());
-            existing.setLastName(updatedVolunteer.getLastName());
-            existing.setMiddleName(updatedVolunteer.getMiddleName());
-            existing.setOrganizationId(updatedVolunteer.getOrganizationId());
-            return volunteerRepository.save(existing);
-        });
-    }
+    // public Optional<Volunteer> updateVolunteer(String email, Volunteer updatedVolunteer) {
+    //     return volunteerRepository.findById(email).map(existing -> {
+    //         existing.setFirstName(updatedVolunteer.getFirstName());
+    //         existing.setLastName(updatedVolunteer.getLastName());
+    //         existing.setMiddleName(updatedVolunteer.getMiddleName());
+    //         existing.setOrganizationId(updatedVolunteer.getOrganizationId());
+    //         return volunteerRepository.save(existing);
+    //     });
+    // }
 }

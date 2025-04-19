@@ -8,10 +8,13 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.example.volunteer.exceptions.auth.InvalidValidationException;
 import com.example.volunteer.exceptions.auth.NullUserException;
 import com.example.volunteer.exceptions.auth.UserExistsException;
+import com.example.volunteer.model.Volunteer;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.UserRepository;
+import com.example.volunteer.repository.VolunteerRepository; // Добавить импорт
 import com.example.volunteer.service.auth.password.PasswordValidator;
 import com.example.volunteer.service.auth.token.TokenService;
 import com.example.volunteer.DTO.auth.UserRegistrationDTO;
@@ -23,6 +26,9 @@ import com.example.volunteer.DTO.auth.UserRegistrationDTO;
 public class UserRegistrationService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VolunteerRepository volunteerRepository; // Добавить поле и аннотацию
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -76,12 +82,19 @@ public class UserRegistrationService {
         user.setPassword(passwordEncoder.encode(password));
         user.setEnabled(false);
 
-        tokenService.generateToken(user);
+        tokenService.generateToken(user); // Токен теперь генерируется в EmailVerificationService
 
         User savedUser = userRepository.save(user);
-        ;
 
-        emailVerificationService.sendVerificationEmail(savedUser);
+        if ("ROLE_VOLUNTEER".equals(savedUser.getRole())) {
+            Volunteer volunteerProfile = new Volunteer(savedUser);
+            // Установить organizationId и middleName, если они есть в DTO и нужны
+            // volunteerProfile.setOrganizationId(registrationDTO.getOrganizationId()); // Пример
+            // volunteerProfile.setMiddleName(registrationDTO.getMiddleName()); // Пример
+            volunteerRepository.save(volunteerProfile);
+        }
+
+        emailVerificationService.sendVerificationEmail(savedUser); // Отправляем письмо после всех сохранений
 
         return savedUser;
     }
