@@ -16,6 +16,9 @@ import com.example.volunteer.service.auth.password.PasswordValidator;
 import com.example.volunteer.service.auth.token.TokenService;
 import com.example.volunteer.DTO.auth.UserRegistrationDTO;
 
+/**
+ * Сервис для регистрации новых пользователей.
+ */
 @Service
 public class UserRegistrationService {
     @Autowired
@@ -23,14 +26,28 @@ public class UserRegistrationService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private TokenService tokenService;
 
     @Autowired
     private EmailVerificationService emailVerificationService;
 
-    @Transactional 
+    /**
+     * Регистрирует нового пользователя в системе.
+     * Проверяет существование пользователя, валидирует пароль, сохраняет
+     * пользователя
+     * и отправляет email для верификации.
+     *
+     * @param registrationDTO DTO с данными для регистрации.
+     * @return Сохраненный объект User.
+     * @throws NullUserException          если registrationDTO равен null.
+     * @throws UserExistsException        если пользователь с таким email уже
+     *                                    существует.
+     * @throws InvalidValidationException если пароль не соответствует требованиям
+     *                                    безопасности.
+     */
+    @Transactional
     public User registerUser(UserRegistrationDTO registrationDTO) {
         if (registrationDTO == null) {
             throw new NullUserException();
@@ -53,15 +70,16 @@ public class UserRegistrationService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setRole(role);
-        
+
         // Генерируем ID для пользователя
-        user.setId(UUID.randomUUID().toString());       
+        user.setId(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(password));
         user.setEnabled(false);
-        
+
         tokenService.generateToken(user);
 
-        User savedUser = userRepository.save(user);;
+        User savedUser = userRepository.save(user);
+        ;
 
         emailVerificationService.sendVerificationEmail(savedUser);
 

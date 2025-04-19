@@ -11,7 +11,10 @@ import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
 
-
+/**
+ * Компонент для генерации, валидации и извлечения информации из JWT токенов
+ * доступа.
+ */
 @Component
 public class JwtTokenProvider {
 
@@ -23,12 +26,21 @@ public class JwtTokenProvider {
 
     private SecretKey jwtSecretKey;
 
+    /**
+     * Инициализирует секретный ключ JWT после создания бина.
+     */
     @PostConstruct
     protected void init() {
         // Преобразуем строку секрета в ключ
         jwtSecretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecretString));
     }
-    
+
+    /**
+     * Генерирует JWT токен доступа для указанного ID пользователя.
+     *
+     * @param userId ID пользователя.
+     * @return Сгенерированный JWT токен доступа.
+     */
     public String generateAccessToken(String userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtAccessExpirationInMs);
@@ -41,7 +53,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-   
+    /**
+     * Извлекает ID пользователя из JWT токена.
+     *
+     * @param token JWT токен.
+     * @return ID пользователя.
+     * @throws JwtException если токен невалиден или истек.
+     */
     public String getUserIdFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(jwtSecretKey)
@@ -51,15 +69,21 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
+    /**
+     * Валидирует JWT токен.
+     * Проверяет подпись и срок действия токена.
+     *
+     * @param authToken JWT токен для валидации.
+     * @return true, если токен валиден, иначе false.
+     */
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser()
-                .verifyWith(jwtSecretKey)
-                .build()
-                .parseSignedClaims(authToken);
+                    .verifyWith(jwtSecretKey)
+                    .build()
+                    .parseSignedClaims(authToken);
             return true;
-        } 
-        catch (JwtException | IllegalArgumentException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             System.err.println("Invalid JWT token: " + e.getMessage());
         }
         return false;

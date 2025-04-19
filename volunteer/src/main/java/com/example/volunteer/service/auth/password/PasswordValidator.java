@@ -7,11 +7,23 @@ import com.example.volunteer.exceptions.auth.InvalidValidationException;
 import java.util.ArrayList;
 import java.util.List;
 
-// Компонент для проверки пароля на соответствие требованиям
-
+/**
+ * Компонент для проверки пароля на соответствие требованиям безопасности.
+ */
 @Component
-
 public class PasswordValidator {
+    /**
+     * Валидирует пароль на соответствие требованиям:
+     * - Минимум 8 символов.
+     * - Хотя бы одна цифра.
+     * - Хотя бы одна строчная буква.
+     * - Хотя бы одна заглавная буква.
+     * - Хотя бы один специальный символ.
+     *
+     * @param password Пароль для проверки.
+     * @throws InvalidValidationException если пароль не соответствует требованиям,
+     *                                    содержит список ошибок.
+     */
     public static void validate(String password) {
         List<String> errors = new ArrayList<>();
 
