@@ -2,3 +2,4 @@
 задание.txt
 data/testdb.mv.db
 frontend/node_modules/
+backend/volunteer/src/main/resources/application.properties
