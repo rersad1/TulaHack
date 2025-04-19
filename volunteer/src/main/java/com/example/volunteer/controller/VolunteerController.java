@@ -21,12 +21,12 @@ public class VolunteerController {
         return ResponseEntity.ok(created);
     }
 
-    @PutMapping("/{email}")
-    public ResponseEntity<Volunteer> updateVolunteer(
-            @PathVariable String email,
-            @RequestBody Volunteer updatedVolunteer) {
-        return volunteerService.updateVolunteer(email, updatedVolunteer)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    // @PutMapping("/{email}")
+    // public ResponseEntity<Volunteer> updateVolunteer(
+    //         @PathVariable String email,
+    //         @RequestBody Volunteer updatedVolunteer) {
+    //     return volunteerService.updateVolunteer(email, updatedVolunteer)
+    //             .map(ResponseEntity::ok)
+    //             .orElse(ResponseEntity.notFound().build());
+    // }
 }
