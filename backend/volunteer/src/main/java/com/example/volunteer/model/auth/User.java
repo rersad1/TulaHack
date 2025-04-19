@@ -1,6 +1,6 @@
 package com.example.volunteer.model.auth;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,7 +34,7 @@ public class User {
     private String authToken;
 
     @Column(nullable = true)
-    private LocalDateTime tokenCreatedAt;
+    private Instant tokenCreatedAt;
 
     @Column(nullable = false)
     private Boolean enabled = false;

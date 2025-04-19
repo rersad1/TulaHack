@@ -46,27 +46,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF, т.к. используем JWT
+                .csrf(AbstractHttpConfigurer::disable) // CSRF отключен
                 .authorizeHttpRequests(auth -> auth
-                        // Разрешаем доступ к эндпоинтам аутентификации/регистрации всем
+                        // Эндпоинты, доступные всем
                         .requestMatchers(
-                            "/api/auth/**", 
-                            "/api/register",
-                            "/api/verify-email",
-                            "/api/forgot-password",
-                            "/api/reset-password",
-                            "/api/login",
-                            "/api/token-login",
-                            "/api/refresh-token" 
-                        ).permitAll()
-                        // Разрешаем доступ к /api/volunteer/** только пользователям с ролью VOLUNTEER
-                        .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER") // Исправлен путь на /api/volunteers/**
-                        // Разрешаем доступ к /api/user/** пользователям с ролью USER или VOLUNTEER
-                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER") // Исправлен путь на /api/users/**
-                        // Все остальные запросы требуют аутентификации
+                                "/api/auth/**",
+                                "/api/register",
+                                "/api/verify-email", // GET-запрос для верификации
+                                "/api/forgot-password", // Вероятно, /api/request-reset-password
+                                "/api/reset-password",
+                                "/api/login",
+                                "/api/token-login", // POST-запрос для входа по токену
+                                "/api/refresh-token")
+                        .permitAll()
+                        // Правила для других эндпоинтов
+                        .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
+                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
+                        // Все остальные требуют аутентификации
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
-                        // Используем сессии без состояния (stateless)
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

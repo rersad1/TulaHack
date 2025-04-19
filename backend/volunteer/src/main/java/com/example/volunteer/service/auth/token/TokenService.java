@@ -8,7 +8,8 @@ import com.example.volunteer.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 /**
@@ -33,7 +34,8 @@ public class TokenService {
         String token = UUID.randomUUID().toString();
 
         user.setAuthToken(token);
-        user.setTokenCreatedAt(LocalDateTime.now());
+        // Используем Instant.now() для получения текущего момента времени в UTC
+        user.setTokenCreatedAt(Instant.now());
         userRepository.save(user);
 
         return token;
@@ -77,15 +79,18 @@ public class TokenService {
     /**
      * Проверяет, истек ли срок действия токена.
      *
-     * @param tokenCreatedAt Время создания токена.
+     * @param tokenCreatedAt Время создания токена (тип Instant).
      * @return true, если токен истек или время создания не задано, иначе false.
      */
-    public boolean isTokenExpired(LocalDateTime tokenCreatedAt) {
+    // Принимаем Instant в качестве параметра
+    public boolean isTokenExpired(Instant tokenCreatedAt) {
         if (tokenCreatedAt == null) {
             return true;
         }
 
-        LocalDateTime expirationTime = tokenCreatedAt.plusMinutes(TOKEN_EXPIRATION_MINUTES);
-        return LocalDateTime.now().isAfter(expirationTime);
+        // Рассчитываем время истечения, добавляя минуты к Instant
+        Instant expirationTime = tokenCreatedAt.plus(TOKEN_EXPIRATION_MINUTES, ChronoUnit.MINUTES);
+        // Сравниваем текущий момент времени (UTC) с временем истечения
+        return Instant.now().isAfter(expirationTime);
     }
 }
