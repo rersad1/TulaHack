@@ -14,25 +14,40 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Реализация UserDetailsService для загрузки пользовательских данных для Spring
+ * Security.
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    /**
+     * Загружает данные пользователя по его email (используется как username).
+     *
+     * @param email Email пользователя.
+     * @return UserDetails объект с данными пользователя.
+     * @throws UsernameNotFoundException если пользователь с таким email не найден.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email)); // TODO: исправить обработку ошибок
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email)); // TODO:
+                                                                                                          // исправить
+                                                                                                          // обработку
+                                                                                                          // ошибок
 
-        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()));
+        List<GrantedAuthority> authorities = Collections
+                .singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
                 user.isEnabled(),
-                true, 
-                true, 
+                true,
+                true,
                 true,
                 authorities);
     }

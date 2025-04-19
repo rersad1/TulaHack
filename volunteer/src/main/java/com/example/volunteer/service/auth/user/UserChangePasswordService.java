@@ -11,8 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-// Сервис для смены пароля из настроек пользователя
-
+/**
+ * Сервис для смены пароля из настроек пользователя.
+ */
 @Service
 public class UserChangePasswordService {
 
@@ -22,6 +23,21 @@ public class UserChangePasswordService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Изменяет пароль пользователя.
+     * Проверяет корректность старого пароля, совпадение нового пароля со старым,
+     * и валидирует новый пароль перед сохранением.
+     *
+     * @param email       Email пользователя.
+     * @param oldPassword Старый пароль.
+     * @param newPassword Новый пароль.
+     * @throws NonExistsUserException      если пользователь с таким email не
+     *                                     найден.
+     * @throws InvalidOldPasswordException если старый пароль введен неверно.
+     * @throws SamePasswordException       если новый пароль совпадает со старым.
+     * @throws InvalidValidationException  если новый пароль не соответствует
+     *                                     требованиям безопасности.
+     */
     public void changePassword(String email, String oldPassword, String newPassword) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new NonExistsUserException());
 

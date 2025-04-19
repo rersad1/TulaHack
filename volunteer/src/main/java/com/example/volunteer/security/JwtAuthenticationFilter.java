@@ -19,6 +19,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Фильтр Spring Security для обработки JWT аутентификации.
+ * Извлекает JWT токен из заголовка Authorization, валидирует его
+ * и устанавливает аутентификацию пользователя в SecurityContextHolder.
+ */
 @Component // Регистрируем фильтр как компонент Spring
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -31,10 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService customUserDetailsService; // Сервис для загрузки данных пользователя
 
+    /**
+     * Основной метод фильтра, выполняющийся для каждого запроса.
+     * Извлекает JWT токен, валидирует его, загружает данные пользователя
+     * и устанавливает аутентификацию в контексте безопасности.
+     *
+     * @param request     HttpServletRequest.
+     * @param response    HttpServletResponse.
+     * @param filterChain FilterChain для передачи запроса дальше по цепочке.
+     * @throws ServletException если возникает ошибка сервлета.
+     * @throws IOException      если возникает ошибка ввода-вывода.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
 
@@ -44,20 +60,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userEmail = tokenProvider.getUserIdFromToken(jwt); // Метод возвращает email
 
                 // Загружаем детали пользователя по email (username)
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(userEmail); // Используем стандартный метод
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(userEmail); // Используем
+                                                                                                  // стандартный метод
 
                 // Создаем объект аутентификации
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 // Устанавливаем аутентификацию в SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             // Логирование ошибки, если необходимо
-            // Убедитесь, что UsernameNotFoundException из loadUserByUsername здесь корректно обрабатывается
-            // или пробрасывается дальше для обработки стандартными механизмами Spring Security
+            // Убедитесь, что UsernameNotFoundException из loadUserByUsername здесь
+            // корректно обрабатывается
+            // или пробрасывается дальше для обработки стандартными механизмами Spring
+            // Security
             logger.error("Could not set user authentication in security context", ex);
         }
 
@@ -65,7 +84,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Вспомогательный метод для извлечения JWT из заголовка Authorization
+    /**
+     * Вспомогательный метод для извлечения JWT из заголовка Authorization.
+     * Ожидает формат "Bearer {token}".
+     *
+     * @param request HttpServletRequest.
+     * @return Строка с JWT токеном или null, если токен отсутствует или имеет
+     *         неверный формат.
+     */
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

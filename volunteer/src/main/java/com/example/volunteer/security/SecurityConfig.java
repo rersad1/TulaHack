@@ -19,6 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Конфигурация безопасности Spring Security.
+ * Определяет правила доступа к эндпоинтам, настройки сессий,
+ * провайдер аутентификации и фильтр JWT.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -28,6 +33,16 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
+    /**
+     * Конфигурирует цепочку фильтров безопасности HTTP.
+     * Отключает CSRF, настраивает правила авторизации запросов,
+     * устанавливает политику управления сессиями (stateless),
+     * добавляет провайдер аутентификации и JWT фильтр.
+     *
+     * @param http HttpSecurity объект для конфигурации.
+     * @return Сконфигурированный SecurityFilterChain.
+     * @throws Exception если возникает ошибка при конфигурации.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -40,18 +55,22 @@ public class SecurityConfig {
                         // Разрешаем доступ к /api/user/** пользователям с ролью USER или VOLUNTEER
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "VOLUNTEER")
                         // Все остальные запросы требуют аутентификации
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         // Используем сессии без состояния (stateless)
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Создает и конфигурирует DaoAuthenticationProvider.
+     * Устанавливает UserDetailsService и PasswordEncoder.
+     *
+     * @return Сконфигурированный AuthenticationProvider.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -60,11 +79,23 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Предоставляет AuthenticationManager из конфигурации аутентификации.
+     *
+     * @param config AuthenticationConfiguration.
+     * @return AuthenticationManager.
+     * @throws Exception если возникает ошибка при получении AuthenticationManager.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Предоставляет бин PasswordEncoder (BCryptPasswordEncoder).
+     *
+     * @return PasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
