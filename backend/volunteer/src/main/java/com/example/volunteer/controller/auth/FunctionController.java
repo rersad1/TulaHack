@@ -70,15 +70,16 @@ public class FunctionController {
 
     /**
      * Эндпоинт для подтверждения email пользователя по токену.
+     * После успешного подтверждения генерирует и возвращает JWT токены для входа.
      *
      * @param token Токен верификации, полученный из письма.
-     * @return ResponseEntity со статусом OK и сообщением об успешном подтверждении.
+     * @return ResponseEntity со статусом OK и DTO с JWT токенами и ролью.
      */
-    // TODO: логинить акк после подтверждения
     @GetMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        emailVerificationService.verifyEmail(token);
-        return new ResponseEntity<>("Email успешно подтвержден", HttpStatus.OK);
+    public ResponseEntity<LoginResponseDTO> verifyEmail(@RequestParam("token") String token) {
+        User verifiedUser = emailVerificationService.verifyEmail(token);
+        LoginResponseDTO tokens = jwtAuthService.issueTokens(verifiedUser);
+        return ResponseEntity.ok(tokens);
     }
 
     /**

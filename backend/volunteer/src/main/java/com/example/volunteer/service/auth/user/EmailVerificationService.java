@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 /**
  * Сервис для управления верификацией email пользователя.
  */
@@ -40,13 +42,15 @@ public class EmailVerificationService {
      * @param user Пользователь, которому нужно отправить письмо.
      */
     public void sendVerificationEmail(User user) {
-        // Используем существующий токен или создаем новый, если он отсутствует
         String token = user.getAuthToken();
-        if (token == null || tokenService.isTokenExpired(user.getTokenCreatedAt())) { // Проверяем и на истечение срока
-            token = tokenService.generateToken(user); // Генерируем новый, если старый истек или отсутствует
+        // Получаем Instant напрямую
+        Instant tokenCreationInstant = user.getTokenCreatedAt();
+
+        // Передаем Instant в isTokenExpired
+        if (token == null || tokenService.isTokenExpired(tokenCreationInstant)) {
+            token = tokenService.generateToken(user);
         }
 
-        // Формируем ссылку на фронтенд
         String verificationLink = frontendBaseUrl + frontendVerificationPath + "/" + token;
         authEmailService.sendRegistrationLink(user.getEmail(), verificationLink);
     }
@@ -54,29 +58,20 @@ public class EmailVerificationService {
     /**
      * Верифицирует email пользователя по предоставленному токену.
      * Активирует учетную запись пользователя, если токен валиден и не истек.
-     * Этот метод вызывается API контроллером, когда фронтенд отправляет токен.
      *
      * @param token Токен верификации.
+     * @return Верифицированный объект User.
      * @throws InvalidAuthToken      если токен не найден или недействителен.
      * @throws TokenExpiredException если срок действия токена истек.
      */
-    public void verifyEmail(String token) {
-        // Удаляем возможные кавычки, если они передаются
-        token = token.replace("\"", "");
+    public User verifyEmail(String token) {
+        // validateToken теперь корректно работает с Instant
+        User user = tokenService.validateToken(token);
 
-        User user = userRepository.findByAuthToken(token).orElseThrow(InvalidAuthToken::new);
-
-        // Проверка срока действия токена
-        if (tokenService.isTokenExpired(user.getTokenCreatedAt())) {
-            // Можно не удалять токен сразу, а дать возможность переотправить письмо
-            // tokenService.clearToken(user);
-            throw new TokenExpiredException();
-        }
-
-        // Активируем учетную запись пользователя и очищаем токен
         user.setEnabled(true);
-        tokenService.clearToken(user); // Очищаем токен после успешной верификации
+        tokenService.clearToken(user);
         userRepository.save(user);
+        return user;
     }
 
     /**
@@ -84,21 +79,18 @@ public class EmailVerificationService {
      * Генерирует новый токен перед отправкой.
      *
      * @param email Email пользователя для повторной отправки.
-     * @throws RuntimeException если пользователь не найден или email уже
-     *                          подтвержден.
      */
     public void resendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден")); // Используйте более специфичное
-                                                                                    // исключение, если нужно
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
         if (Boolean.TRUE.equals(user.getEnabled())) {
-            throw new RuntimeException("Email уже подтвержден"); // Используйте более специфичное исключение
+            throw new RuntimeException("Email уже подтвержден");
         }
 
-        // Генерируем новый токен (старый будет перезаписан)
+        // generateToken устанавливает Instant.now()
         tokenService.generateToken(user);
-
-        sendVerificationEmail(user); // Отправляем письмо с новым токеном и ссылкой на фронтенд
+        // sendVerificationEmail теперь корректно работает с Instant
+        sendVerificationEmail(user);
     }
 }

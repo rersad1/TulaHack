@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import VerifyEmail from './pages/VerifyEmail';
 import UserDashboard from './pages/UserDashboard'; // Import the new User Dashboard
+import VolunteerDashboard from './pages/VolunteerDashboard'; // Import Volunteer Dashboard
 import Home from './pages/Home'; // This is now the Role Selection page
 import LandingPage from './pages/LandingPage'; // Import the new Landing Page
 
@@ -11,17 +12,22 @@ function App() {
     const navigate = useNavigate();
     const location = useLocation();
     const accessToken = localStorage.getItem('accessToken');
+    const userRole = localStorage.getItem('userRole'); // Read role from localStorage
 
-    // Redirect logged-in users trying to access public pages to '/profile'
+    // Determine the correct dashboard path based on the role
+    const dashboardPath = userRole === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard';
+
+    // Redirect logged-in users trying to access public pages to their specific dashboard
     useEffect(() => {
         if (accessToken && ['/', '/choose-role', '/login', '/register'].includes(location.pathname)) {
-            navigate('/profile', { replace: true });
+            navigate(dashboardPath, { replace: true }); // Redirect to specific dashboard
         }
-    }, [accessToken, location.pathname, navigate]);
+    }, [accessToken, location.pathname, navigate, dashboardPath, userRole]);
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole'); // Remove role on logout
         navigate('/'); // Navigate to landing page on logout
         window.location.reload();
     };
@@ -40,7 +46,10 @@ function App() {
                         </>
                     ) : (
                         <>
-                            <Link to="/profile" className="text-[#111418] text-sm font-medium leading-normal mr-4">Профиль</Link>
+                            {/* Link to the correct dashboard */}
+                            <Link to={dashboardPath} className="text-[#111418] text-sm font-medium leading-normal mr-4">
+                                {userRole === 'VOLUNTEER' ? 'Панель волонтера' : 'Моя панель'}
+                            </Link>
                             <button onClick={handleLogout} className="text-[#111418] text-sm font-medium leading-normal">Выход</button>
                         </>
                     )}
@@ -48,18 +57,27 @@ function App() {
             </nav>
 
             <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/choose-role" element={!accessToken ? <Home /> : <Navigate to="/profile" replace />} />
-                <Route path="/register" element={!accessToken ? <Register /> : <Navigate to="/profile" replace />} />
-                <Route path="/login" element={!accessToken ? <Login /> : <Navigate to="/profile" replace />} />
+                {/* Public Routes - Redirect if logged in */}
+                <Route path="/" element={!accessToken ? <LandingPage /> : <Navigate to={dashboardPath} replace />} />
+                <Route path="/choose-role" element={!accessToken ? <Home /> : <Navigate to={dashboardPath} replace />} />
+                <Route path="/register" element={!accessToken ? <Register /> : <Navigate to={dashboardPath} replace />} />
+                <Route path="/login" element={!accessToken ? <Login /> : <Navigate to={dashboardPath} replace />} />
                 <Route path="/verify-email/:token" element={<VerifyEmail />} /> {/* Keep accessible */}
 
-                {/* Profile/Dashboard Route - Now accessible without login */}
-                <Route path="/profile" element={<UserDashboard />} />
+                {/* Protected Routes */}
+                {/* Use Navigate for routes accessible only when logged in */}
+                <Route
+                    path="/user-dashboard"
+                    element={accessToken ? <UserDashboard /> : <Navigate to="/login" replace />}
+                />
+                <Route
+                    path="/volunteer-dashboard"
+                    element={accessToken ? <VolunteerDashboard /> : <Navigate to="/login" replace />}
+                />
 
                 {/* Catch-all Redirect */}
-                <Route path="*" element={<Navigate to={accessToken ? "/profile" : "/"} replace />} />
+                {/* Redirect unknown paths to the appropriate dashboard if logged in, or landing page if not */}
+                <Route path="*" element={<Navigate to={accessToken ? dashboardPath : "/"} replace />} />
             </Routes>
         </div>
     );

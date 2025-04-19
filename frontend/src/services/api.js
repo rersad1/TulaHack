@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '/api', // Ensure baseURL points to your API prefix correctly
+    baseURL: 'http://localhost:8080', // Ensure baseURL points to your API prefix correctly
     headers: { 'Content-Type': 'application/json' }
 });
 
@@ -18,8 +18,5 @@ api.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-
-// Опционально: добавить interceptor для обработки ошибок (например, 401 для обновления токена)
-// api.interceptors.response.use(...)
 
 export default api;
