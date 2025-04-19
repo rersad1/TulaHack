@@ -19,25 +19,46 @@ function VerifyEmail() {
             try {
                 // Отправляем GET запрос на бэкенд с токеном в query параметрах
                 // Бэкенд ожидает токен в @RequestParam("token")
-                await api.get(`/verify-email?token=${token}`);
+                // Ожидаем ответ с токенами и ролью
+                const response = await api.get(`/api/verify-email?token=${token}`);
+                const { accessToken, refreshToken, role } = response.data;
+
+                // Сохраняем токены и роль в localStorage
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('userRole', role);
+
+                // Отладочный вывод для проверки роли
+                console.log("VerifyEmail: Получена роль от сервера:", role);
+                console.log("VerifyEmail: Тип роли:", typeof role);
+
                 setVerificationStatus('success');
-                setMessage('Email успешно подтвержден! Теперь вы можете войти.');
-                // Опционально: перенаправить на страницу входа через несколько секунд
+                setMessage('Email успешно подтвержден! Вы вошли в систему.');
+
+                // Определяем путь для редиректа на основе роли
+                const dashboardPath = role.trim() === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard';
+                console.log("VerifyEmail: Перенаправление на:", dashboardPath);
+
+                // Перенаправляем на соответствующую панель через 3 секунды
                 setTimeout(() => {
-                    navigate('/login');
+                    navigate(dashboardPath, { replace: true });
+                    window.location.reload(); // Перезагружаем страницу для обновления состояния App
                 }, 3000);
+
             } catch (err) {
                 setVerificationStatus('error');
-                const errorMsg = err.response?.data || 'Ошибка подтверждения email.';
-                // Уточняем сообщение об ошибке для истекшего токена
-                if (errorMsg.includes("Токен устарел")) {
+                // Используем более общее сообщение или специфичное из ответа сервера
+                const errorMsg = err.response?.data?.message || err.response?.data || 'Ошибка подтверждения email.';
+
+                // Уточняем сообщение об ошибке для истекшего/невалидного токена
+                if (errorMsg.includes("Токен устарел") || (err.response?.status === 401 && errorMsg.toLowerCase().includes("expired"))) {
                     setMessage('Ссылка для подтверждения истекла. Пожалуйста, запросите новую ссылку или зарегистрируйтесь снова.');
-                } else if (errorMsg.includes("Недействительный токен")) {
+                } else if (errorMsg.includes("Недействительный токен") || (err.response?.status === 401 && errorMsg.toLowerCase().includes("invalid"))) {
                     setMessage('Недействительная ссылка для подтверждения. Возможно, email уже подтвержден или ссылка некорректна.');
+                } else {
+                    setMessage(`Ошибка: ${errorMsg}`); // Показываем общую ошибку
                 }
-                else {
-                    setMessage(errorMsg);
-                }
+                console.error("Verification error:", err.response || err);
             }
         };
 

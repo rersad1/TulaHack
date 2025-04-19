@@ -6,9 +6,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,28 +19,43 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Фильтр Spring Security для обработки JWT аутентификации.
  * Извлекает JWT токен из заголовка Authorization, валидирует его
- * и устанавливает аутентификацию пользователя в SecurityContextHolder.
+ * и устанавливает аутентификацию пользователя в SecurityContextHolder,
+ * пропуская публичные эндпоинты.
  */
-@Component // Регистрируем фильтр как компонент Spring
+@Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // Добавляем логгер
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService; // Сервис для загрузки данных пользователя
+    // Список публичных путей, которые не требуют проверки JWT
+    private static final List<String> PUBLIC_PATHS = Arrays.asList(
+            "/api/register",
+            "/api/login",
+            "/api/token-login",
+            "/api/refresh-token",
+            "/api/request-reset-password",
+            "/api/reset-password",
+            "/api/resend-verification",
+            "/api/verify-email",
+            "/swagger-ui",
+            "/v3/api-docs"
+    );
 
     /**
      * Основной метод фильтра, выполняющийся для каждого запроса.
-     * Извлекает JWT токен, валидирует его, загружает данные пользователя
-     * и устанавливает аутентификацию в контексте безопасности.
+     * Пропускает публичные эндпоинты. Для остальных извлекает JWT токен,
+     * валидирует его, загружает данные пользователя и устанавливает
+     * аутентификацию в контексте безопасности.
      *
      * @param request     HttpServletRequest.
      * @param response    HttpServletResponse.
@@ -49,38 +65,59 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
+        // пропускаем preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String requestURI = request.getRequestURI();
+        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(requestURI::startsWith);
+        if (isPublic) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        logger.debug("Request URI {} is not public, processing JWT filter.", requestURI);
+
         try {
             String jwt = getJwtFromRequest(request);
 
             // Проверяем, есть ли токен и валиден ли он
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 // Получаем email пользователя (username) из токена
-                String userEmail = tokenProvider.getUserIdFromToken(jwt); // Метод возвращает email
+                String userEmail = tokenProvider.getUserIdFromToken(jwt); // Предполагаем, что метод возвращает email
 
-                // Загружаем детали пользователя по email (username)
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(userEmail); // Используем
-                                                                                                  // стандартный метод
+                // Проверяем, что email получен и пользователь еще не аутентифицирован
+                if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Загружаем детали пользователя по email (username)
+                    UserDetails userDetails = customUserDetailsService.loadUserByUsername(userEmail);
 
-                // Создаем объект аутентификации
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // Создаем объект аутентификации
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Устанавливаем аутентификацию в SecurityContext
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    // Устанавливаем аутентификацию в SecurityContext
+                    logger.debug("Successfully authenticated user '{}' with roles {}", userEmail, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } 
+                else if (userEmail == null) {
+                    logger.warn("Could not get user email from JWT token.");
+                }
+            } 
+            else {
+                logger.debug("JWT token is missing, invalid, or expired.");
             }
-        } catch (Exception ex) {
-            // Логирование ошибки, если необходимо
-            // Убедитесь, что UsernameNotFoundException из loadUserByUsername здесь
-            // корректно обрабатывается
-            // или пробрасывается дальше для обработки стандартными механизмами Spring
-            // Security
+        } 
+        catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);
         }
 
-        // Продолжаем цепочку фильтров
         filterChain.doFilter(request, response);
     }
 
@@ -97,6 +134,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); // Убираем "Bearer "
         }
+        logger.trace("No JWT token found in Authorization header.");
         return null;
     }
 }

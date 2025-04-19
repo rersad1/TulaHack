@@ -1,10 +1,10 @@
-// filepath: /home/rersad/projects/TulaHack/volunteer/src/main/java/com/example/volunteer/security/SecurityConfig.java
 package com.example.volunteer.security;
 
 import com.example.volunteer.service.auth.user.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -18,6 +18,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List; // Импортируем List
 
 /**
  * Конфигурация безопасности Spring Security.
@@ -26,7 +32,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // Включает аннотации безопасности на методах (например, @PreAuthorize)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -35,7 +41,7 @@ public class SecurityConfig {
 
     /**
      * Конфигурирует цепочку фильтров безопасности HTTP.
-     * Отключает CSRF, настраивает правила авторизации запросов,
+     * Отключает CSRF, настраивает CORS, правила авторизации запросов,
      * устанавливает политику управления сессиями (stateless),
      * добавляет провайдер аутентификации и JWT фильтр.
      *
@@ -46,35 +52,61 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // CSRF отключен
-                .authorizeHttpRequests(auth -> auth
-                        // Эндпоинты, доступные всем
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/register",
-                                "/api/verify-email", // GET-запрос для верификации
-                                "/api/forgot-password", // Вероятно, /api/request-reset-password
-                                "/api/reset-password",
-                                "/api/login",
-                                "/api/token-login", // POST-запрос для входа по токену
-                                "/api/refresh-token")
-                        .permitAll()
-                        // Правила для других эндпоинтов
-                        .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
-                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
-                        // Все остальные требуют аутентификации
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                // разрешаем preflight OPTIONS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // публичные POST‑эндпойнты
+                .requestMatchers(HttpMethod.POST,
+                        "/api/register",
+                        "/api/login",
+                        "/api/token-login",
+                        "/api/refresh-token",
+                        "/api/request-reset-password",
+                        "/api/reset-password",
+                        "/api/resend-verification")
+                    .permitAll()
+                // публичный GET на verify-email
+                .requestMatchers(HttpMethod.GET, "/api/verify-email").permitAll()
+                // Swagger
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // остальные правила…
+                .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
+                .anyRequest().authenticated()
+            )
+        // …existing code…
+        ;
         return http.build();
     }
 
     /**
+     * Конфигурация CORS для разрешения запросов с определенных источников (например, фронтенда).
+     *
+     * @return CorsConfigurationSource
+     */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Укажите URL вашего фронтенда
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        // Разрешенные HTTP методы
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Разрешенные заголовки
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
+        // Разрешить отправку куки и заголовков авторизации
+        configuration.setAllowCredentials(true);
+        // Применить эту конфигурацию ко всем путям
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    /**
      * Создает и конфигурирует DaoAuthenticationProvider.
-     * Устанавливает UserDetailsService и PasswordEncoder.
+     * Устанавливает UserDetailsService (для загрузки данных пользователя)
+     * и PasswordEncoder (для проверки паролей).
      *
      * @return Сконфигурированный AuthenticationProvider.
      */
@@ -87,7 +119,8 @@ public class SecurityConfig {
     }
 
     /**
-     * Предоставляет AuthenticationManager из конфигурации аутентификации.
+     * Предоставляет AuthenticationManager из конфигурации аутентификации Spring.
+     * Необходим для некоторых процессов аутентификации.
      *
      * @param config AuthenticationConfiguration.
      * @return AuthenticationManager.
@@ -99,7 +132,8 @@ public class SecurityConfig {
     }
 
     /**
-     * Предоставляет бин PasswordEncoder (BCryptPasswordEncoder).
+     * Предоставляет бин PasswordEncoder (используем BCrypt).
+     * Необходим для хеширования паролей при регистрации и проверки при входе.
      *
      * @return PasswordEncoder.
      */

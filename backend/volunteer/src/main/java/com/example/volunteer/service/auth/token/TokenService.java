@@ -4,71 +4,47 @@ import com.example.volunteer.exceptions.auth.InvalidAuthToken;
 import com.example.volunteer.exceptions.auth.TokenExpiredException;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.UserRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.security.SecureRandom;
+import java.time.Instant; // Используем Instant
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
-/**
- * Сервис для управления одноразовыми токенами аутентификации (не JWT).
- * Используется для верификации email, сброса пароля и подтверждения входа.
- */
 @Service
 public class TokenService {
 
-    private static final long TOKEN_EXPIRATION_MINUTES = 15; // Срок действия токена в минутах
+    private static final long TOKEN_VALIDITY_MINUTES = 15;
+    private static final SecureRandom random = new SecureRandom();
 
     @Autowired
     private UserRepository userRepository;
 
     /**
-     * Генерирует новый одноразовый токен для пользователя и сохраняет его.
+     * Генерирует уникальный 6-значный числовой токен, связывает его с пользователем,
+     * устанавливает временную метку создания (Instant), сохраняет пользователя и возвращает токен.
+     * Проверяет на коллизии и генерирует заново, если токен уже существует.
      *
-     * @param user Пользователь, для которого генерируется токен.
-     * @return Сгенерированный токен.
+     * @param user Пользователь, для которого нужно сгенерировать токен.
+     * @return Сгенерированный 6-значный токен в виде строки.
      */
     public String generateToken(User user) {
-        String token = UUID.randomUUID().toString();
+        String token;
+        do {
+            int number = 100000 + random.nextInt(900000);
+            token = String.valueOf(number);
+        } while (userRepository.existsByAuthToken(token));
 
         user.setAuthToken(token);
-        // Используем Instant.now() для получения текущего момента времени в UTC
         user.setTokenCreatedAt(Instant.now());
         userRepository.save(user);
-
         return token;
     }
 
     /**
-     * Валидирует предоставленный токен.
-     * Проверяет существование пользователя с таким токеном и срок действия токена.
+     * Очищает токен аутентификации и его временную метку создания для пользователя.
      *
-     * @param token Токен для валидации.
-     * @return Пользователь, связанный с токеном.
-     * @throws InvalidAuthToken      если токен не найден или недействителен.
-     * @throws TokenExpiredException если срок действия токена истек.
-     */
-    public User validateToken(String token) {
-
-        token = token.replace("\"", "");
-
-        User user = userRepository.findByAuthToken(token).orElseThrow(() -> new InvalidAuthToken());
-
-        // Проверка срока действия токена
-        if (isTokenExpired(user.getTokenCreatedAt())) {
-            clearToken(user);
-            throw new TokenExpiredException();
-        }
-
-        return user;
-    }
-
-    /**
-     * Очищает (удаляет) токен и время его создания у пользователя.
-     *
-     * @param user Пользователь, у которого нужно очистить токен.
+     * @param user Пользователь, чей токен должен быть очищен.
      */
     public void clearToken(User user) {
         user.setAuthToken(null);
@@ -77,20 +53,39 @@ public class TokenService {
     }
 
     /**
-     * Проверяет, истек ли срок действия токена.
+     * Проверяет, истек ли срок действия токена, связанного с данным временем создания.
      *
-     * @param tokenCreatedAt Время создания токена (тип Instant).
-     * @return true, если токен истек или время создания не задано, иначе false.
+     * @param tokenCreationInstant Время создания токена (Instant).
+     * @return true, если токен истек или время создания равно null, иначе false.
      */
-    // Принимаем Instant в качестве параметра
-    public boolean isTokenExpired(Instant tokenCreatedAt) {
-        if (tokenCreatedAt == null) {
-            return true;
+    public boolean isTokenExpired(Instant tokenCreationInstant) {
+        if (tokenCreationInstant == null) {
+            return true; // Считаем токен без времени создания истекшим/невалидным
+        }
+        // Сравниваем моменты времени Instant
+        return tokenCreationInstant.plus(TOKEN_VALIDITY_MINUTES, ChronoUnit.MINUTES).isBefore(Instant.now());
+    }
+
+    /**
+     * Валидирует предоставленный одноразовый токен.
+     * Находит пользователя по токену и проверяет срок его действия (используя Instant).
+     *
+     * @param token Одноразовый токен для валидации.
+     * @return Объект User, связанный с валидным токеном.
+     * @throws InvalidAuthToken если токен не найден.
+     * @throws TokenExpiredException если срок действия токена истек.
+     */
+    public User validateToken(String token) {
+        token = token.replace("\"", "");
+
+        User user = userRepository.findByAuthToken(token).orElseThrow(InvalidAuthToken::new);
+
+        // Проверка срока действия токена с использованием Instant
+        if (isTokenExpired(user.getTokenCreatedAt())) {
+            clearToken(user);
+            throw new TokenExpiredException();
         }
 
-        // Рассчитываем время истечения, добавляя минуты к Instant
-        Instant expirationTime = tokenCreatedAt.plus(TOKEN_EXPIRATION_MINUTES, ChronoUnit.MINUTES);
-        // Сравниваем текущий момент времени (UTC) с временем истечения
-        return Instant.now().isAfter(expirationTime);
+        return user;
     }
 }

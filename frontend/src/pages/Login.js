@@ -30,12 +30,31 @@ function Login() {
         setMessage('');
         try {
             const response = await api.post('/api/token-login', { token }); // Ensure /api prefix
-            // Сохраняем токены в localStorage
-            localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('refreshToken', response.data.refreshToken);
+            const { accessToken, refreshToken, role } = response.data; // Destructure role
+
+            // Отладочный вывод для проверки роли
+            console.log("Login: Получена роль от сервера:", role);
+            console.log("Login: Тип роли:", typeof role);
+
+            // Сохраняем токены и роль в localStorage
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('userRole', role); // Store the role
             setMessage('Вход выполнен успешно!');
-            // Перенаправляем на защищенную страницу (например, профиль)
-            navigate('/profile'); // Перенаправление после успешного входа
+
+            // --- Role-based redirection ---
+            if (!role) {
+                console.warn("User role not found in token/response. Redirecting to generic profile.");
+                navigate('/user-dashboard'); // Fallback redirect to user dashboard
+            } else if (role.trim() === 'VOLUNTEER') {
+                console.log("Login: Redirecting to volunteer dashboard");
+                navigate('/volunteer-dashboard'); // Redirect volunteer
+            } else {
+                console.log("Login: Redirecting to user dashboard");
+                navigate('/user-dashboard'); // Redirect regular user (or any other role)
+            }
+            // --- End Role-based redirection ---
+
             window.location.reload(); // Reload to update App state and routing
             console.log('Login successful, tokens received:', response.data);
         } catch (err) {
