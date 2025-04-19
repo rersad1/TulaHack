@@ -12,10 +12,18 @@ function App() {
     const navigate = useNavigate();
     const location = useLocation();
     const accessToken = localStorage.getItem('accessToken');
-    const userRole = localStorage.getItem('userRole'); // Read role from localStorage
+    const userRole = localStorage.getItem('userRole');
 
-    // Determine the correct dashboard path based on the role
-    const dashboardPath = userRole === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard';
+    // Улучшенный отладочный вывод
+    console.log("App.js: Текущая роль:", userRole);
+    console.log("App.js: Тип роли:", typeof userRole);
+    console.log("App.js: Сравнение роли:", userRole === 'VOLUNTEER', userRole === "VOLUNTEER");
+    console.log("App.js: Должен вести на:", userRole === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard');
+
+    // Ensure we're using strict equality and proper string comparison
+    const dashboardPath = userRole && userRole.trim() === 'VOLUNTEER'
+        ? '/volunteer-dashboard'
+        : '/user-dashboard';
 
     // Redirect logged-in users trying to access public pages to their specific dashboard
     useEffect(() => {

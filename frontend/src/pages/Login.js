@@ -32,6 +32,10 @@ function Login() {
             const response = await api.post('/api/token-login', { token }); // Ensure /api prefix
             const { accessToken, refreshToken, role } = response.data; // Destructure role
 
+            // Отладочный вывод для проверки роли
+            console.log("Login: Получена роль от сервера:", role);
+            console.log("Login: Тип роли:", typeof role);
+
             // Сохраняем токены и роль в localStorage
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
@@ -42,9 +46,11 @@ function Login() {
             if (!role) {
                 console.warn("User role not found in token/response. Redirecting to generic profile.");
                 navigate('/user-dashboard'); // Fallback redirect to user dashboard
-            } else if (role === 'VOLUNTEER') {
+            } else if (role.trim() === 'VOLUNTEER') {
+                console.log("Login: Redirecting to volunteer dashboard");
                 navigate('/volunteer-dashboard'); // Redirect volunteer
             } else {
+                console.log("Login: Redirecting to user dashboard");
                 navigate('/user-dashboard'); // Redirect regular user (or any other role)
             }
             // --- End Role-based redirection ---

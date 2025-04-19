@@ -64,22 +64,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @throws IOException      если возникает ошибка ввода-вывода.
      */
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request, // Добавляем NonNull
-            @NonNull HttpServletResponse response, // Добавляем NonNull
-            @NonNull FilterChain filterChain) // Добавляем NonNull
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Получаем путь запроса
-        final String requestURI = request.getRequestURI();
+        // пропускаем preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        // Проверяем, является ли путь публичным
-        // Используем startsWith для Swagger путей
-        boolean isPublicPath = PUBLIC_PATHS.stream().anyMatch(path -> requestURI.startsWith(path));
-
-        // Если путь публичный, пропускаем фильтр JWT и передаем дальше по цепочке
-        if (isPublicPath) {
-            logger.debug("Request URI {} is public, skipping JWT filter.", requestURI);
+        String requestURI = request.getRequestURI();
+        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(requestURI::startsWith);
+        if (isPublic) {
             filterChain.doFilter(request, response);
             return;
         }

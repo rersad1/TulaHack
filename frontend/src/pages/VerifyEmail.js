@@ -20,7 +20,7 @@ function VerifyEmail() {
                 // Отправляем GET запрос на бэкенд с токеном в query параметрах
                 // Бэкенд ожидает токен в @RequestParam("token")
                 // Ожидаем ответ с токенами и ролью
-                const response = await api.get(`/verify-email?token=${token}`);
+                const response = await api.get(`/api/verify-email?token=${token}`);
                 const { accessToken, refreshToken, role } = response.data;
 
                 // Сохраняем токены и роль в localStorage
@@ -28,11 +28,16 @@ function VerifyEmail() {
                 localStorage.setItem('refreshToken', refreshToken);
                 localStorage.setItem('userRole', role);
 
+                // Отладочный вывод для проверки роли
+                console.log("VerifyEmail: Получена роль от сервера:", role);
+                console.log("VerifyEmail: Тип роли:", typeof role);
+
                 setVerificationStatus('success');
                 setMessage('Email успешно подтвержден! Вы вошли в систему.');
 
                 // Определяем путь для редиректа на основе роли
-                const dashboardPath = role === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard';
+                const dashboardPath = role.trim() === 'VOLUNTEER' ? '/volunteer-dashboard' : '/user-dashboard';
+                console.log("VerifyEmail: Перенаправление на:", dashboardPath);
 
                 // Перенаправляем на соответствующую панель через 3 секунды
                 setTimeout(() => {

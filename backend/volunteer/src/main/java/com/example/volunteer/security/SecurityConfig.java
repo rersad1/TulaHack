@@ -52,36 +52,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Отключаем CSRF, так как используем stateless аутентификацию (JWT)
-                .csrf(AbstractHttpConfigurer::disable)
-                // Применяем конфигурацию CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Настройка правил авторизации для HTTP запросов
-                .authorizeHttpRequests(auth -> auth
-                        // Разрешаем публичный доступ к эндпоинтам аутентификации и регистрации
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/register",
-                                "/api/login",
-                                "/api/token-login",
-                                "/api/refresh-token",
-                                "/api/request-reset-password",
-                                "/api/reset-password",
-                                "/api/resend-verification")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/verify-email").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER") 
-                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
-                        // Все остальные запросы требуют аутентификации
-                        .anyRequest().authenticated())
-                // Настраиваем управление сессиями: STATELESS, так как используем JWT
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Устанавливаем кастомный провайдер аутентификации
-                .authenticationProvider(authenticationProvider())
-                // Добавляем JWT фильтр перед стандартным фильтром аутентификации по логину/паролю
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                // разрешаем preflight OPTIONS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // публичные POST‑эндпойнты
+                .requestMatchers(HttpMethod.POST,
+                        "/api/register",
+                        "/api/login",
+                        "/api/token-login",
+                        "/api/refresh-token",
+                        "/api/request-reset-password",
+                        "/api/reset-password",
+                        "/api/resend-verification")
+                    .permitAll()
+                // публичный GET на verify-email
+                .requestMatchers(HttpMethod.GET, "/api/verify-email").permitAll()
+                // Swagger
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // остальные правила…
+                .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
+                .anyRequest().authenticated()
+            )
+        // …existing code…
+        ;
         return http.build();
     }
 
