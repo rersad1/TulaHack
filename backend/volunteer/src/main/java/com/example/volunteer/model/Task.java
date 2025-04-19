@@ -33,14 +33,20 @@ public class Task {
     private TaskCategory category;
 
     @NonNull
-    private String userEmail;
+    private String userEmail; // почта создавшего
 
-    private Integer rating;        
+    private Integer rating;
     private String userComment;
 
+    
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "task_responses",
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> responders = new HashSet<>();
+
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_volunteer_id")
+    private User assignedVolunteer;
 }
