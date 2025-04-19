@@ -1,4 +1,4 @@
-package com.example.volunteer.dto;
+package com.example.volunteer.DTO;
 
 import com.example.volunteer.model.TaskCategory;
 import com.example.volunteer.model.TaskStatus;
