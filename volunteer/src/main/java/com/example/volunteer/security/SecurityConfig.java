@@ -49,11 +49,20 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF, т.к. используем JWT
                 .authorizeHttpRequests(auth -> auth
                         // Разрешаем доступ к эндпоинтам аутентификации/регистрации всем
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(
+                            "/api/auth/**", 
+                            "/api/register",
+                            "/api/verify-email",
+                            "/api/forgot-password",
+                            "/api/reset-password",
+                            "/api/login",
+                            "/api/token-login",
+                            "/api/refresh-token" 
+                        ).permitAll()
                         // Разрешаем доступ к /api/volunteer/** только пользователям с ролью VOLUNTEER
-                        .requestMatchers("/api/volunteer/**").hasRole("VOLUNTEER")
+                        .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER") // Исправлен путь на /api/volunteers/**
                         // Разрешаем доступ к /api/user/** пользователям с ролью USER или VOLUNTEER
-                        .requestMatchers("/api/user/**").hasAnyRole("USER", "VOLUNTEER")
+                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER") // Исправлен путь на /api/users/**
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
