@@ -2,6 +2,7 @@ package com.example.volunteer.controller;
 
 import com.example.volunteer.converter.TaskConverter;
 import com.example.volunteer.DTO.TaskDTO;
+import com.example.volunteer.DTO.ReviewDTO;
 import com.example.volunteer.model.Task;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.service.TaskService;
@@ -33,6 +34,15 @@ public class TaskController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Endpoint для получения информации о задаче
+    @GetMapping("/{id}")
+    public ResponseEntity<TaskDTO> getTask(@PathVariable Long id) {
+        return taskService.getTask(id)
+                .map(TaskConverter::entityToDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // Endpoint для отклика на заявку 
     @PostMapping("/{id}/respond")
     public ResponseEntity<?> respondToTask(@PathVariable Long id,
@@ -46,6 +56,16 @@ public class TaskController {
     @GetMapping("/{id}/responders")
     public ResponseEntity<Set<User>> getResponders(@PathVariable Long id) {
         return taskService.getResponders(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    
+    // Endpoint для добавления отзыва и комментария от автора заявки
+    @PostMapping("/{id}/review")
+    public ResponseEntity<TaskDTO> addReview(@PathVariable Long id,
+                                             @RequestBody ReviewDTO reviewDto) {
+        return taskService.addReview(id, reviewDto)
+                .map(TaskConverter::entityToDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
