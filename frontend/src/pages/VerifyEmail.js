@@ -23,10 +23,19 @@ function VerifyEmail() {
                 const response = await api.get(`/api/verify-email?token=${token}`);
                 const { accessToken, refreshToken, role } = response.data;
 
+                // --- Added Logging ---
+                console.log("VerifyEmail: API Response Data:", response.data);
+                console.log("VerifyEmail: Extracted Role:", role);
+                // --- End Added Logging ---
+
                 // Сохраняем токены и роль в localStorage
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
-                localStorage.setItem('userRole', role);
+                localStorage.setItem('userRole', role); // Set the role
+
+                // --- Added Logging ---
+                console.log("VerifyEmail: Role saved to localStorage:", localStorage.getItem('userRole'));
+                // --- End Added Logging ---
 
                 // Отладочный вывод для проверки роли
                 console.log("VerifyEmail: Получена роль от сервера:", role);

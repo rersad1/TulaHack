@@ -30,7 +30,9 @@ public class JwtAuthService {
     public LoginResponseDTO issueTokens(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
         String refreshToken = jwtRefreshTokenService.createRefreshToken(user).getToken();
-        return new LoginResponseDTO(accessToken, refreshToken);
+        String userRole = user.getRole(); // Получаем роль пользователя
+
+        return new LoginResponseDTO(accessToken, refreshToken, userRole); 
     }
 
     /**

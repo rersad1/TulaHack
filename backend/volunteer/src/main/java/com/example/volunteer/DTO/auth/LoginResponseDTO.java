@@ -18,4 +18,5 @@ public class LoginResponseDTO {
      * Токен обновления, используемый для получения нового токена доступа.
      */
     private String refreshToken;
+    private String role;
 }

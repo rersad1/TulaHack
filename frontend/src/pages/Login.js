@@ -32,6 +32,11 @@ function Login() {
             const response = await api.post('/api/token-login', { token }); // Ensure /api prefix
             const { accessToken, refreshToken, role } = response.data; // Destructure role
 
+            // --- Added Logging ---
+            console.log("Login: API Response Data:", response.data);
+            console.log("Login: Extracted Role:", role);
+            // --- End Added Logging ---
+
             // Отладочный вывод для проверки роли
             console.log("Login: Получена роль от сервера:", role);
             console.log("Login: Тип роли:", typeof role);
@@ -40,6 +45,11 @@ function Login() {
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('userRole', role); // Store the role
+
+            // --- Added Logging ---
+            console.log("Login: Role saved to localStorage:", localStorage.getItem('userRole'));
+            // --- End Added Logging ---
+
             setMessage('Вход выполнен успешно!');
 
             // --- Role-based redirection ---
