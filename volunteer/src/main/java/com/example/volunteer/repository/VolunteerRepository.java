@@ -1,8 +1,8 @@
 package com.example.volunteer.repository;
 
-import com.example.volunteer.model.User;
+import com.example.volunteer.model.Volunteer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, String> {
+public interface VolunteerRepository extends JpaRepository<Volunteer, String> {
     // email используется как идентификатор
 }
