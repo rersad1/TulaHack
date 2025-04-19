@@ -2,6 +2,7 @@ package com.example.volunteer.service;
 
 import com.example.volunteer.converter.TaskConverter;
 import com.example.volunteer.DTO.TaskDTO;
+import com.example.volunteer.DTO.ReviewDTO;
 import com.example.volunteer.model.Task;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.TaskRepository;
@@ -45,7 +46,6 @@ public class TaskService {
         Optional<User> userOpt = userRepository.findById(userId);
         if (taskOpt.isPresent() && userOpt.isPresent()) {
             Task task = taskOpt.get();
-
             task.getResponders().add(userOpt.get());
             return Optional.of(taskRepository.save(task));
         }
@@ -54,5 +54,18 @@ public class TaskService {
 
     public Optional<Set<User>> getResponders(Long taskId) {
         return taskRepository.findById(taskId).map(Task::getResponders);
+    }
+    
+    public Optional<Task> addReview(Long taskId, ReviewDTO reviewDto) {
+        return taskRepository.findById(taskId).map(task -> {
+            task.setRating(reviewDto.getRating());
+            task.setUserComment(reviewDto.getUserComment());
+            return taskRepository.save(task);
+        });
+    }
+    
+
+    public Optional<Task> getTask(Long id) {
+        return taskRepository.findById(id);
     }
 }

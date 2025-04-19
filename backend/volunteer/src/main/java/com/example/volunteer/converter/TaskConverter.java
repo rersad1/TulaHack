@@ -1,6 +1,6 @@
 package com.example.volunteer.converter;
 
-import com.example.volunteer.dto.TaskDTO;
+import com.example.volunteer.DTO.TaskDTO;
 import com.example.volunteer.model.Task;
 
 public class TaskConverter {
