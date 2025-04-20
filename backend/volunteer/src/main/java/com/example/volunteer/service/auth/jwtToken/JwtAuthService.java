@@ -7,6 +7,7 @@ import com.example.volunteer.model.auth.JwtRefreshToken;
 import com.example.volunteer.model.auth.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Сервис для аутентификации с использованием JWT.

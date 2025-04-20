@@ -5,6 +5,7 @@ import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.JwtRefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -30,15 +31,24 @@ public class JwtRefreshTokenService {
      * @param user Пользователь, для которого создается токен.
      * @return Созданный и сохраненный JwtRefreshToken.
      */
-    public JwtRefreshToken createRefreshToken(User user) {
-        refreshTokenRepository.deleteByUser(user); // Один refresh токен на пользователя
 
+    @Transactional 
+    public JwtRefreshToken createRefreshToken(User user) {
+        // Удаляем существующий токен для этого пользователя, чтобы гарантировать
+        // только один активный refresh токен на пользователя.
+        refreshTokenRepository.deleteByUser(user);
+
+        // Создаем новый объект refresh токена
         JwtRefreshToken refreshToken = new JwtRefreshToken();
-        refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setUser(user);
+        refreshToken.setToken(UUID.randomUUID().toString()); // Генерируем уникальный токен
+        refreshToken.setUser(user); // Связываем с пользователем
+        // Устанавливаем срок действия (текущее время + N дней)
         refreshToken.setExpiryDate(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
+
+        // Сохраняем новый токен в базе данных и возвращаем его
         return refreshTokenRepository.save(refreshToken);
     }
+
 
     /**
      * Находит JWT refresh токен по его строковому значению.
@@ -77,5 +87,8 @@ public class JwtRefreshTokenService {
     public void deleteById(Long id) {
         refreshTokenRepository.deleteById(id);
     }
+
+    
+
 
 }

@@ -14,7 +14,7 @@ import com.example.volunteer.exceptions.auth.UserExistsException;
 import com.example.volunteer.model.Volunteer;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.UserRepository;
-import com.example.volunteer.repository.VolunteerRepository; // Добавить импорт
+import com.example.volunteer.repository.VolunteerRepository;
 import com.example.volunteer.service.auth.password.PasswordValidator;
 import com.example.volunteer.service.auth.token.TokenService;
 import com.example.volunteer.DTO.auth.UserRegistrationDTO;
