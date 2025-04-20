@@ -31,18 +31,14 @@ public class JwtRefreshTokenService {
      * @param user Пользователь, для которого создается токен.
      * @return Созданный и сохраненный JwtRefreshToken.
      */
-
-    @Transactional 
+    @Transactional
     public JwtRefreshToken createRefreshToken(User user) {
-        // Удаляем существующий токен для этого пользователя, чтобы гарантировать
-        // только один активный refresh токен на пользователя.
         refreshTokenRepository.deleteByUser(user);
 
         // Создаем новый объект refresh токена
         JwtRefreshToken refreshToken = new JwtRefreshToken();
         refreshToken.setToken(UUID.randomUUID().toString()); // Генерируем уникальный токен
-        refreshToken.setUser(user); // Связываем с пользователем
-        // Устанавливаем срок действия (текущее время + N дней)
+        refreshToken.setUser(user);
         refreshToken.setExpiryDate(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
 
         // Сохраняем новый токен в базе данных и возвращаем его

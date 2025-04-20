@@ -17,30 +17,30 @@ function VolunteerDashboard() { // Возвращаем имя функции
         setLoading(true)
         setError(null)
         api.post(`/api/tasks/${taskId}/respond`)
-          .then(() => {
-            setTasks(prev => prev.filter(t => t.id !== taskId))
-          })
-          .catch(() => {
-            setError('Не удалось взять заявку')
-          })
-          .finally(() => {
-            setLoading(false)
-          })
-      }
+            .then(() => {
+                setTasks(prev => prev.filter(t => t.id !== taskId))
+            })
+            .catch(() => {
+                setError('Не удалось взять заявку')
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    }
 
     // Загрузка данных
     useEffect(() => {
-    setLoading(true)
-    setError(null)
+        setLoading(true)
+        setError(null)
 
-    api.get('/api/tasks', { params: { status: 'OPEN' } })
-      .then(r => setTasks(r.data))
-      .catch(() => {
-        setError('Не удалось загрузить заявки')
-        setTasks([])
-      })
-      .finally(() => setLoading(false))
-  }, []);
+        api.get('/api/tasks', { params: { status: 'OPEN' } })
+            .then(r => setTasks(r.data))
+            .catch(() => {
+                setError('Не удалось загрузить заявки')
+                setTasks([])
+            })
+            .finally(() => setLoading(false))
+    }, []);
 
     // Вспомогательные функции
     const getStatusClass = (status) => {
@@ -198,8 +198,11 @@ function VolunteerDashboard() { // Возвращаем имя функции
                                             <Link to={`/task/${task.id}`} className="text-[#1980e6] text-sm font-medium hover:underline whitespace-nowrap">
                                                 Подробнее
                                             </Link>
-                                            {/* TODO: Реализовать логику принятия заявки */}
-                                            <button className={`${buttonClass} h-9 px-3 text-xs whitespace-nowrap`}>
+                                            <button
+                                                onClick={() => handleTakeTask(task.id)}
+                                                disabled={loading}
+                                                className={`${buttonClass} h-9 px-3 text-xs whitespace-nowrap ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
                                                 Взять заявку
                                             </button>
                                         </div>

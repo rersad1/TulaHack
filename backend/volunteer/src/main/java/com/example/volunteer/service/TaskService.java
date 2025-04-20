@@ -12,30 +12,29 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.List; 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository; 
+    private final UserRepository userRepository;
 
-    @Transactional 
+    @Transactional
     public Task create(TaskDTO taskDto) {
         Task task = new Task();
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
-        task.setStatus(TaskStatus.OPEN); 
+        task.setStatus(TaskStatus.OPEN);
         task.setCategory(taskDto.getCategory());
-        task.setUserEmail(taskDto.getUserEmail()); 
+        task.setUserEmail(taskDto.getUserEmail());
         return taskRepository.save(task);
     }
 
-    @Transactional 
+    @Transactional
     public Optional<Task> update(Long id, TaskDTO taskDto) {
         return taskRepository.findById(id).map(task -> {
             task.setTitle(taskDto.getTitle());
@@ -47,12 +46,12 @@ public class TaskService {
         });
     }
 
-    @Transactional(readOnly = true) 
+    @Transactional(readOnly = true)
     public Optional<Task> getTask(Long id) {
         return taskRepository.findById(id);
     }
 
-    @Transactional 
+    @Transactional
     public Optional<Task> respondToTask(Long taskId, String userId) {
         Optional<Task> taskOptional = taskRepository.findById(taskId);
         Optional<User> userOptional = userRepository.findById(userId);
@@ -62,11 +61,13 @@ public class TaskService {
             User user = userOptional.get();
 
             if (task.getStatus() == TaskStatus.OPEN && "VOLUNTEER".equals(user.getRole())) {
-                 task.getResponders().add(user);
-                 return Optional.of(taskRepository.save(task));
+                task.getResponders().add(user);
+                task.setAssignedVolunteer(user);
+                task.setStatus(TaskStatus.IN_PROGRESS);
+                return Optional.of(taskRepository.save(task));
             }
         }
-        return Optional.empty(); 
+        return Optional.empty();
     }
 
     @Transactional(readOnly = true)
@@ -74,18 +75,18 @@ public class TaskService {
         return taskRepository.findById(taskId).map(Task::getResponders);
     }
 
-    @Transactional 
+    @Transactional
     public Optional<Task> addReview(Long taskId, ReviewDTO reviewDto) {
-         return taskRepository.findById(taskId).map(task -> {
+        return taskRepository.findById(taskId).map(task -> {
 
-             if (task.getStatus() == TaskStatus.COMPLETED ) {
-                 task.setRating(reviewDto.getRating());
-                 task.setUserComment(reviewDto.getUserComment());
-                 return taskRepository.save(task);
-             }
-          
-             return task; 
-         });
+            if (task.getStatus() == TaskStatus.COMPLETED) {
+                task.setRating(reviewDto.getRating());
+                task.setUserComment(reviewDto.getUserComment());
+                return taskRepository.save(task);
+            }
+
+            return task;
+        });
     }
 
     @Transactional(readOnly = true)
