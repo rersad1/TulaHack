@@ -7,11 +7,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * Сервис для управления чат-коматой
+ */
 @Service
 public class ChatRoomService {
 
     @Autowired private ChatRoomRepository chatRoomRepository;
 
+    /**
+     * Ищет ID чата по отправителю и получателю
+     * @param senderId
+     * @param recipientId
+     * @param createIfNotExisted
+     * @return ID чата
+     */
     public Optional<String> getChatId(String senderId, String recipientId, boolean createIfNotExisted){
         return chatRoomRepository
                 .findBySenderIdAndRecipientId(senderId, recipientId)
