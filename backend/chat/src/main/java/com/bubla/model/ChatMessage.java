@@ -4,12 +4,8 @@ package com.bubla.model;
 
 
 
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.Date;
 
@@ -17,12 +13,21 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "ChatMessage")
+@Entity
+@Table(name = "chat_message")
 public class ChatMessage {
+
     @Id
     private String id;
+
+
+    @NonNull
     private String chatId;
+
+    @NonNull
     private String senderId;
+
+    @NonNull
     private String recipientId;
     private String senderName;
     private String getRecipientName;
