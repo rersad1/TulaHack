@@ -9,4 +9,6 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Long> {
      List<Task> findByCategoryAndStatusAndAssignedVolunteerIsNotNullAndRatingIsNotNull(
             TaskCategory category, TaskStatus status);
+
+     List<Task> findByUserEmail(String userEmail);
 }
