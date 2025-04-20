@@ -4,6 +4,7 @@ import com.example.volunteer.model.auth.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,6 +22,16 @@ public class Task {
     private String title;
 
     @NonNull
+    @Enumerated(EnumType.STRING)
+    private LocationType locationType;      
+    private String address;                 
+
+    private LocalDateTime preferredDateTime; 
+
+    @NonNull
+    private String userEmail; 
+
+    @NonNull
     @Column(length = 2000)
     private String description;
 
@@ -31,9 +42,6 @@ public class Task {
     @NonNull
     @Enumerated(EnumType.STRING)
     private TaskCategory category;
-
-    @NonNull
-    private String userEmail; // почта создавшего
 
     private Integer rating;
     private String userComment;

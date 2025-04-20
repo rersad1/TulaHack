@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import api from '../services/api'; // Раскомментируйте для отправки данных
+import api from '../services/api'; // Раскомментируем для отправки данных
 
 function CreateRequestForm() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        assistanceType: '',
+        assistanceType: '', // Это будет category на бэкенде
         description: '',
         preferredDateTime: '',
         address: '',
-        locationType: 'OFFLINE',
+        locationType: 'OFFLINE', // 'ONLINE' или 'OFFLINE'
         agreedToTerms: false,
     });
     const [error, setError] = useState('');
@@ -23,6 +23,7 @@ function CreateRequestForm() {
             setFormData(prevData => ({
                 ...prevData,
                 locationType: newLocationType,
+                // Очищаем адрес, если выбрана онлайн помощь
                 address: checked ? '' : prevData.address,
             }));
         } else {
@@ -45,37 +46,51 @@ function CreateRequestForm() {
         }
 
         const isOffline = formData.locationType === 'OFFLINE';
+        // Проверяем обязательные поля
         if (!formData.assistanceType || !formData.description || (isOffline && !formData.address)) {
             setError(`Пожалуйста, заполните все обязательные поля (${isOffline ? 'тип помощи, описание, адрес' : 'тип помощи, описание'}).`);
             setLoading(false);
             return;
         }
 
-        const dataToSend = { ...formData };
-        if (formData.locationType === 'ONLINE') {
-            delete dataToSend.address;
-        }
+        // Формируем данные для отправки на бэкенд (TaskDTO)
+        const dataToSend = {
+            title: formData.assistanceType, // Используем тип помощи как заголовок
+            description: formData.description,
+            category: formData.assistanceType, // assistanceType соответствует category
+            locationType: formData.locationType,
+            address: formData.locationType === 'OFFLINE' ? formData.address : null, // Адрес только для оффлайн
+            preferredDateTime: formData.preferredDateTime || null, // Отправляем null, если дата не выбрана
+            status: 'OPEN', // Новая заявка всегда OPEN
+            // userEmail будет определен на бэкенде из JWT токена
+        };
 
         console.log("Отправка заявки:", dataToSend);
-        // TODO: Заменить console.log на реальный вызов API с dataToSend
-        // try {
-        //   const response = await api.post('/api/requests', dataToSend);
-        //   console.log("Заявка успешно отправлена:", response.data);
-        //   navigate('/user-dashboard');
-        // } catch (err) {
-        //   setError('Не удалось отправить заявку. Пожалуйста, попробуйте снова.');
-        //   console.error("Ошибка отправки заявки:", err);
-        // } finally {
-        //   setLoading(false);
-        // }
 
-        setTimeout(() => {
-            setLoading(false);
-            console.log("Имитация успешной отправки.");
-            navigate('/user-dashboard');
-        }, 1000);
+        try {
+          // Отправляем POST запрос на эндпоинт создания задачи
+          const response = await api.post('/api/tasks', dataToSend);
+          console.log("Заявка успешно отправлена:", response.data);
+          // Перенаправляем пользователя на его дашборд после успеха
+          navigate('/user-dashboard');
+        } catch (err) {
+          // Обрабатываем ошибки от API
+          setError(err.response?.data?.message || err.response?.data || 'Не удалось отправить заявку. Пожалуйста, попробуйте снова.');
+          console.error("Ошибка отправки заявки:", err.response || err);
+        } finally {
+          // В любом случае убираем индикатор загрузки
+          setLoading(false);
+        }
+
+        // Убираем имитацию отправки
+        // setTimeout(() => {
+        //     setLoading(false);
+        //     console.log("Имитация успешной отправки.");
+        //     navigate('/user-dashboard');
+        // }, 1000);
     };
 
+    // ... стили остаются без изменений ...
     const pageStyle = "relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden";
     const containerStyle = "px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5";
     const contentBoxStyle = "layout-content-container flex flex-col w-full max-w-2xl py-5";
@@ -95,7 +110,7 @@ function CreateRequestForm() {
 
     const svgStyles = {
         '--checkbox-tick-svg': `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='rgb(255,255,255)' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e")`,
-        '--select-button-svg': `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24px' height='24px' fill='rgb(99,117,136)' viewBox='0 0 256 256'%3e%3cpath d='M181.66,170.34a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,212.69l42.34-42.35A8,8,0,0,1,181.66,170.34Zm-96-84.68L128,43.31l42.34,42.35a8,8,0,0,0,11.32-11.32l-48-48a8,8,0,0,0-11.32,0l-48,48A8,8,0,0,0,85.66,85.66Z'%3e%3c/path%3e%3c/svg%3e")`,
+        '--select-button-svg': `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24px' height='24px' fill='rgb(99,117,136)' viewBox='0 0 256 256'%3e%3cpath d='M181.66,170.34a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,212.69l42.34-42.35A8,8,0,0,1,181.66,170.34Zm-96-84.68L128,43.31l42.34,42.35a8,8,0,0,0,11.32-11.32l-48-48a8,8,0,0,0-11.32,0l-48,48A8,8,0,0,0,85.66,85.66Z'/%3e%3c/svg%3e")`,
     };
 
     return (
@@ -105,11 +120,12 @@ function CreateRequestForm() {
                     <div className={contentBoxStyle}>
                         <h1 className={titleStyle}>Заявка на помощь волонтеров</h1>
                         <form onSubmit={handleSubmit} className={formContainerStyle}>
+                            {/* Поле выбора типа помощи */}
                             <div className={fieldGroupStyle}>
                                 <label htmlFor="assistanceType" className={labelStyle}>Требуемая помощь*</label>
                                 <select
                                     id="assistanceType"
-                                    name="assistanceType"
+                                    name="assistanceType" // Имя для состояния React
                                     className={selectStyle}
                                     value={formData.assistanceType}
                                     onChange={handleInputChange}
@@ -127,11 +143,12 @@ function CreateRequestForm() {
                                 </select>
                             </div>
 
+                            {/* Чекбокс для онлайн помощи */}
                             <div className={checkboxContainerStyle}>
                                 <input
                                     type="checkbox"
                                     id="isOnlineCheckbox"
-                                    name="isOnlineCheckbox"
+                                    name="isOnlineCheckbox" // Имя для обработчика
                                     className={checkboxStyle}
                                     checked={formData.locationType === 'ONLINE'}
                                     onChange={handleInputChange}
@@ -139,6 +156,7 @@ function CreateRequestForm() {
                                 <label htmlFor="isOnlineCheckbox" className={checkboxLabelStyle}>Нужна помощь онлайн?</label>
                             </div>
 
+                            {/* Поле адреса (только если не онлайн) */}
                             {formData.locationType === 'OFFLINE' && (
                                 <div className={fieldGroupStyle}>
                                     <label htmlFor="address" className={labelStyle}>Адрес (где нужна помощь)*</label>
@@ -150,11 +168,12 @@ function CreateRequestForm() {
                                         className={inputBaseStyle}
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        required
+                                        required={formData.locationType === 'OFFLINE'} // Обязательно только для оффлайн
                                     />
                                 </div>
                             )}
 
+                            {/* Поле описания */}
                             <div className={fieldGroupStyle}>
                                 <label htmlFor="description" className={labelStyle}>Опишите необходимую помощь*</label>
                                 <textarea
@@ -168,6 +187,7 @@ function CreateRequestForm() {
                                 ></textarea>
                             </div>
 
+                            {/* Поле даты и времени */}
                             <div className={fieldGroupStyle}>
                                 <label htmlFor="preferredDateTime" className={labelStyle}>Предпочитаемая дата и время</label>
                                 <input
@@ -180,6 +200,7 @@ function CreateRequestForm() {
                                 />
                             </div>
 
+                            {/* Чекбокс согласия с условиями */}
                             <div className={checkboxContainerStyle}>
                                 <input
                                     type="checkbox"
@@ -192,13 +213,15 @@ function CreateRequestForm() {
                                 <label htmlFor="agreedToTerms" className={checkboxLabelStyle}>Я согласен с условиями использования</label>
                             </div>
 
+                            {/* Отображение ошибки */}
                             {error && <p className={errorStyle}>{error}</p>}
 
+                            {/* Кнопка отправки */}
                             <div className={buttonContainerStyle}>
                                 <button
                                     type="submit"
                                     className={buttonStyle}
-                                    disabled={loading || !formData.agreedToTerms}
+                                    disabled={loading || !formData.agreedToTerms} // Блокируем кнопку во время загрузки или если не согласен с условиями
                                 >
                                     {loading ? 'Отправка...' : 'Отправить заявку'}
                                 </button>

@@ -12,4 +12,5 @@ public class VolunteerStatsDto {
     private User volunteer;
     private double averageRating;
     private long completedTasksCount;
+    
 }
