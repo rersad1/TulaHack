@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,4 +14,5 @@ public class UserInfoDTO {
     private String lastName;
     private String role;
     private Boolean enabled;
+    private Double rating;
 }

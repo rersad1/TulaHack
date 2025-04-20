@@ -24,14 +24,14 @@ public class ChatRoomService {
                     ChatRoom senderRecipient = ChatRoom
                             .builder()
                             .chatId(chatId)
-                            .senderid(senderId)
-                            .recepientId(recipientId)
+                            .senderId(senderId)
+                            .recipientId(recipientId)
                             .build();
                     ChatRoom recipientSender =  ChatRoom
                             .builder()
                             .chatId(chatId)
-                            .senderid(recipientId)
-                            .recepientId(senderId)
+                            .senderId(recipientId)
+                            .recipientId(senderId)
                             .build();
                     chatRoomRepository.save(senderRecipient);
                     chatRoomRepository.save(recipientSender);
