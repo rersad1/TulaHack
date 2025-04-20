@@ -28,11 +28,11 @@ public class JwtAuthService {
      * @return LoginResponseDTO, содержащий access и refresh токены.
      */
     public LoginResponseDTO issueTokens(User user) {
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
         String refreshToken = jwtRefreshTokenService.createRefreshToken(user).getToken();
         String userRole = user.getRole(); // Получаем роль пользователя
 
-        return new LoginResponseDTO(accessToken, refreshToken, userRole); 
+        return new LoginResponseDTO(accessToken, refreshToken, userRole);
     }
 
     /**
@@ -53,6 +53,7 @@ public class JwtAuthService {
         }
 
         User user = foundToken.getUser();
+        // Метод issueTokens теперь будет генерировать правильный access токен
         return issueTokens(user);
     }
 }
