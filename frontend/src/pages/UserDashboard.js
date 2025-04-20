@@ -10,7 +10,7 @@ function UserDashboard() {
 
   useEffect(() => {
     setLoading(true)
-    api.get('/tasks/my-tasks')
+    api.get('/api/tasks/my-tasks')
       .then(r => setTasks(r.data))
       .catch(() => setError('Не удалось загрузить ваши заявки'))
       .finally(() => setLoading(false))
