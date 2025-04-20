@@ -7,12 +7,13 @@ function UserDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
     // Common card class
     const cardClass = "block bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors mb-4 shadow-sm";
     // Common button class
     const buttonClass = "flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#1980e6] text-white text-sm font-bold leading-normal tracking-[0.015em]";
 
-    // Function to get status color (example)
+    // Function to get status color
     const getStatusClass = (status) => {
         switch (status) {
             case 'OPEN': return 'bg-blue-100 text-blue-800'; // Match backend enum
@@ -22,6 +23,12 @@ function UserDashboard() {
             default: return 'bg-gray-100 text-gray-800';
         }
     };
+    const Sidebar = () => {
+        const isActive = (path) => location.pathname === path;
+        const linkBaseStyle = "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100";
+        const activeLinkStyle = "bg-[#f0f2f4]";
+        const textStyle = "text-[#111418] text-sm font-medium leading-normal";
+
 
     // Function to format date (optional)
     const formatDate = (dateString) => {
@@ -63,20 +70,41 @@ function UserDashboard() {
                 <div className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
                     <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5">
 
-                        <h2 className="text-[#111418] text-3xl font-bold leading-tight tracking-[-0.015em] px-4 py-3 mb-6">Панель пользователя</h2>
 
-                        {/* Section: Create New Task */}
-                        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
-                            <h3 className="text-[#111418] text-xl font-bold mb-3">Создать новую заявку</h3>
-                            <p className="text-[#637588] text-base mb-4">
-                                Нужна помощь? Опишите вашу задачу, и волонтеры откликнутся.
-                            </p>
-                            <Link to="/create-task"> {/* Link to the task creation page */}
-                                <button className={buttonClass}>
-                                    <span className="truncate">Создать заявку</span>
-                                </button>
-                            </Link>
+        return (
+            <div className="flex flex-col w-64 md:w-72 bg-white p-4 border-r border-gray-200 flex-shrink-0 h-screen sticky top-0">
+                <div className="flex flex-col gap-4 flex-grow">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center size-10 rounded-full bg-blue-100 text-blue-600 font-semibold">
+                            П
                         </div>
+                        <span className="font-semibold">Пользователь</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <Link to="/user-dashboard" className={`${linkBaseStyle} ${isActive('/user-dashboard') ? activeLinkStyle : ''}`}>
+                            <span className="text-gray-700">📄</span>
+                            <p className={textStyle}>Мои заявки</p>
+                        </Link>
+                        <Link to="/create-request" className={`${linkBaseStyle} ${isActive('/create-request') ? activeLinkStyle : ''}`}>
+                            <span className="text-gray-700">➕</span>
+                            <p className={textStyle}>Создать заявку</p>
+                        </Link>
+                        <Link to="/profile" className={`${linkBaseStyle} ${isActive('/profile') ? activeLinkStyle : ''}`}>
+                            <span className="text-gray-700">👤</span>
+                            <p className={textStyle}>Профиль</p>
+                        </Link>
+                    </div>
+                </div>
+                <div className="mt-auto pt-4 border-t border-gray-200">
+                    <Link to="/" className={linkBaseStyle}>
+                        <span className="text-gray-700">🏠</span>
+                        <p className={textStyle}>На главную</p>
+                    </Link>
+                </div>
+            </div>
+        );
+    };
+
 
                         {/* Section: My Tasks */}
                         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
@@ -125,7 +153,9 @@ function UserDashboard() {
                             </Link>
                         </div>
 
+
                     </div>
+
                 </div>
             </div>
         </div>
