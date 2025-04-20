@@ -111,7 +111,7 @@ public class SecurityConfig {
         return source;
     }
 
-    // ... existing authenticationProvider, authenticationManager, passwordEncoder methods ...
+    
     /**
      * Создает и конфигурирует DaoAuthenticationProvider.
      * Устанавливает UserDetailsService (для загрузки данных пользователя)

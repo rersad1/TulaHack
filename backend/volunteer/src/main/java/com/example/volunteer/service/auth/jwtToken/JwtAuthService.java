@@ -53,7 +53,7 @@ public class JwtAuthService {
         }
 
         User user = foundToken.getUser();
-        // Метод issueTokens теперь будет генерировать правильный access токен
+        
         return issueTokens(user);
     }
 }

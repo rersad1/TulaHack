@@ -39,10 +39,10 @@ public class UserConverter {
         );
     }
 
-    // Добавляем метод для конвертации списка
+
     public List<UserInfoDTO> entityToDto(List<User> users) {
         return users.stream()
-                .map(this::entityToDto) // Вызываем entityToDto(User) для каждого элемента
+                .map(this::entityToDto) 
                 .collect(Collectors.toList());
     }
 

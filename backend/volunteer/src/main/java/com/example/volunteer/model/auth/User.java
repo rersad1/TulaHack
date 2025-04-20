@@ -11,7 +11,6 @@ import lombok.*;
 public class User {
 
     @Id
-    // Определение колонки остается прежним, если оно вам нужно
     @Column(name = "id", columnDefinition = "VARCHAR(36)", updatable = false, nullable = false, unique = true)
     private String id;
 

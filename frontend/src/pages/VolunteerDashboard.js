@@ -13,13 +13,27 @@ function VolunteerDashboard() { // Возвращаем имя функции
     // Стили
     const buttonClass = "flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#1980e6] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 transition-colors duration-200";
     const cardClass = "block bg-white border border-gray-200 rounded-xl p-4 md:p-6 hover:shadow-md transition-shadow duration-200 mb-4";
+    const handleTakeTask = (taskId) => {
+        setLoading(true)
+        setError(null)
+        api.post(`/api/tasks/${taskId}/respond`)
+          .then(() => {
+            setTasks(prev => prev.filter(t => t.id !== taskId))
+          })
+          .catch(() => {
+            setError('Не удалось взять заявку')
+          })
+          .finally(() => {
+            setLoading(false)
+          })
+      }
 
     // Загрузка данных
     useEffect(() => {
     setLoading(true)
     setError(null)
 
-    api.get('/tasks', { params: { status: 'OPEN' } })
+    api.get('/api/tasks', { params: { status: 'OPEN' } })
       .then(r => setTasks(r.data))
       .catch(() => {
         setError('Не удалось загрузить заявки')

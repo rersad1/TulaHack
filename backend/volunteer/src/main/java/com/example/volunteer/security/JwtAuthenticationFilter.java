@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/verify-email",
             "/swagger-ui",
             "/v3/api-docs"
-            // Добавьте сюда другие публичные пути, если необходимо (например, статика, actuator/health)
+            
     );
 
     /**
