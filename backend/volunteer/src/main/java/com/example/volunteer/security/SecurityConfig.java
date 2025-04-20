@@ -22,6 +22,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.volunteer.model.TaskStatus;
 import java.util.Arrays;
 import java.util.List; // Импортируем List
 
@@ -75,7 +76,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/profile").authenticated() 
                 // остальные правила…
                 .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
-                
+                .requestMatchers("/api/tasks/**").hasAnyRole("USER","VOLUNTEER")
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER") 
                 .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
             )

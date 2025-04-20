@@ -88,6 +88,10 @@ public class TaskService {
          });
     }
 
+    @Transactional(readOnly = true)
+    public List<Task> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status);
+    }
 
     @Transactional(readOnly = true)
     public List<Task> getTasksByUserEmail(String userEmail) {

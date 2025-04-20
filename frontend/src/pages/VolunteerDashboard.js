@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios'; // Assuming axios is installed and configured for API calls
-// import { FiFilter, FiBriefcase, FiUser, FiGrid, FiSearch, FiHome } from 'react-icons/fi'; // Пример иконок
+import api from '../services/api'
 
 function VolunteerDashboard() { // Возвращаем имя функции
     // Состояния для фильтров и данных
@@ -17,35 +16,17 @@ function VolunteerDashboard() { // Возвращаем имя функции
 
     // Загрузка данных
     useEffect(() => {
-        const fetchTasks = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // Замените '/api/tasks' на ваш реальный эндпоинт
-                // const response = await api.get('/api/tasks');
-                // setTasks(response.data.filter(task => task.status === 'OPEN') || []);
+    setLoading(true)
+    setError(null)
 
-                // Заглушка данных
-                const mockTasks = [
-                    { id: 1, title: "Помощь с продуктами", description: "Нужно купить продукты пожилому человеку", status: 'OPEN', category: 'SOCIAL', locationType: 'OFFLINE', userEmail: 'user1@example.com' },
-                    { id: 2, title: "Уборка парка", description: "Субботник в парке 'Центральный'", status: 'OPEN', category: 'ECOLOGY', locationType: 'OFFLINE', userEmail: 'user2@example.com' },
-                    { id: 3, title: "Онлайн-урок английского", description: "Помощь школьнику с домашним заданием", status: 'OPEN', category: 'EDUCATION', locationType: 'ONLINE', userEmail: 'user3@example.com' },
-                    { id: 4, title: "Сопроводить в больницу", description: "Нужна помощь в сопровождении до поликлиники", status: 'OPEN', category: 'MEDICAL', locationType: 'OFFLINE', userEmail: 'user4@example.com' },
-                    { id: 5, title: "Помощь с переездом", description: "Нужно помочь перенести легкие вещи", status: 'OPEN', category: 'OTHER', locationType: 'OFFLINE', userEmail: 'user5@example.com' },
-                ];
-                await new Promise(resolve => setTimeout(resolve, 500)); // Имитация задержки
-                setTasks(mockTasks);
-
-            } catch (err) {
-                console.error("Error fetching tasks:", err);
-                setError("Не удалось загрузить заявки. Попробуйте позже.");
-                setTasks([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTasks();
-    }, []);
+    api.get('/tasks', { params: { status: 'OPEN' } })
+      .then(r => setTasks(r.data))
+      .catch(() => {
+        setError('Не удалось загрузить заявки')
+        setTasks([])
+      })
+      .finally(() => setLoading(false))
+  }, []);
 
     // Вспомогательные функции
     const getStatusClass = (status) => {

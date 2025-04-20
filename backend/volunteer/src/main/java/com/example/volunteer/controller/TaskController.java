@@ -7,6 +7,7 @@ import com.example.volunteer.DTO.UserDto;
 import com.example.volunteer.DTO.UserInfoDTO; 
 import com.example.volunteer.DTO.ReviewDTO;
 import com.example.volunteer.model.Task;
+import com.example.volunteer.model.TaskStatus; 
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.UserRepository; 
 import com.example.volunteer.service.TaskService;
@@ -135,5 +136,15 @@ public class TaskController {
         }
         TaskDTO dto = taskConverter.entityToDto(updated.get());
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TaskDTO>> getTasks(
+            @RequestParam(required = false, defaultValue = "OPEN") TaskStatus status) {
+        List<Task> tasks = taskService.getTasksByStatus(status);
+        List<TaskDTO> dtos = tasks.stream()
+                .map(task -> taskConverter.entityToDto(task))  
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 }
