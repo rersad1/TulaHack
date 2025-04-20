@@ -75,6 +75,7 @@ function App() {
 
                 {/* Protected Routes */}
                 {/* Use Navigate for routes accessible only when logged in */}
+                <Route path="/profile" element={<Profile/>}/>
                 <Route
                     path="/user-dashboard"
                     element={accessToken ? <UserDashboard /> : <Navigate to="/login" replace />}
