@@ -1,29 +1,29 @@
 package com.example.volunteer.model;
 
-import com.example.volunteer.model.auth.User; // Импортируем auth.User
-import jakarta.persistence.*; // Импортируем нужные аннотации JPA
+import com.example.volunteer.model.auth.User; 
+import jakarta.persistence.*; 
 import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "volunteers") // Таблица для специфичных данных волонтеров
+@Table(name = "volunteers") 
 public class Volunteer {
 
     @Id
-    @Column(name = "user_id") // Имя колонки для ID, совпадающее с ID в auth.User
-    private String id; // Тип должен совпадать с User.id (String)
+    @Column(name = "user_id") 
+    private String id; 
 
-    // Связь OneToOne с основной таблицей пользователей
-    @OneToOne(fetch = FetchType.LAZY) // Используем LAZY загрузку для оптимизации
-    @MapsId // Указывает, что PK (id) также является FK к User
-    @JoinColumn(name = "user_id") // Имя колонки внешнего ключа
-    private User user; // Ссылка на объект User
+
+    @OneToOne(fetch = FetchType.LAZY) 
+    @MapsId 
+    @JoinColumn(name = "user_id")
+    private User user; 
 
     private String middleName;
 
-    private Long organizationId; // ID организации, к которой принадлежит волонтер
+    private Long organizationId;
 
     private String skills;
     private Double rating;

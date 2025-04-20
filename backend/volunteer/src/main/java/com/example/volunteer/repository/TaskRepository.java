@@ -11,4 +11,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             TaskCategory category, TaskStatus status);
 
      List<Task> findByUserEmail(String userEmail);
+     List<Task> findByStatus(TaskStatus status);
+    
 }
