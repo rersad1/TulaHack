@@ -10,28 +10,16 @@ function Profile() {
 
     useEffect(() => {
         const fetchUserData = async () => {
+            setLoading(true);
+            setError('');
             try {
-                // const response = await api.get('/users/me'); // Пример реального эндпоинта
-                // setUserData(response.data);
-
-                // Обновляем заглушку, добавляя новые поля
-                const userRole = localStorage.getItem('userRole') || "Неизвестно";
-                const placeholderData = {
-                    firstName: "Имя (Заглушка)",
-                    lastName: "Фамилия",
-                    middleName: "Отчество", // Новое поле
-                    email: "email@example.com",
-                    phoneNumber: "+7 (999) 123-45-67", // Новое поле
-                    organization: "Название Компании", // Новое поле (если применимо)
-                    rating: 4.8, // Новое поле (оценка)
-                    role: userRole
-                };
-                setUserData(placeholderData);
-                setLoading(false);
+                const response = await api.get('/api/profile');
+                setUserData(response.data);
             } catch (err) {
-                setError('Не удалось загрузить данные пользователя. Возможно, требуется войти снова.');
-                setLoading(false);
+                setError('Не удалось загрузить данные пользователя.');
                 console.error("Profile fetch error:", err);
+            } finally {
+                setLoading(false);
             }
         };
 

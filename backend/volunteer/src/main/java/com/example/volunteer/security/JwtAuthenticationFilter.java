@@ -49,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/verify-email",
             "/swagger-ui",
             "/v3/api-docs"
+            // Добавьте сюда другие публичные пути, если необходимо (например, статика, actuator/health)
     );
 
     /**
@@ -64,20 +65,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @throws IOException      если возникает ошибка ввода-вывода.
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        // пропускаем preflight
+        // Пропускаем preflight OPTIONS запросы
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String requestURI = request.getRequestURI();
-        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(requestURI::startsWith);
+
+        // Проверяем, является ли путь публичным
+        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(publicPath -> requestURI.startsWith(publicPath) || requestURI.matches(publicPath.replace("**", ".*"))); // Улучшенная проверка для Swagger
         if (isPublic) {
+            logger.trace("Request URI {} is public, skipping JWT filter.", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
@@ -90,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Проверяем, есть ли токен и валиден ли он
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 // Получаем email пользователя (username) из токена
-                String userEmail = tokenProvider.getUserIdFromToken(jwt); // Предполагаем, что метод возвращает email
+                String userEmail = tokenProvider.getUserEmailFromToken(jwt);
 
                 // Проверяем, что email получен и пользователь еще не аутентифицирован
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -105,17 +109,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Устанавливаем аутентификацию в SecurityContext
                     logger.debug("Successfully authenticated user '{}' with roles {}", userEmail, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                } 
+                }
                 else if (userEmail == null) {
                     logger.warn("Could not get user email from JWT token.");
                 }
-            } 
-            else {
-                logger.debug("JWT token is missing, invalid, or expired.");
+                // Если пользователь уже аутентифицирован, ничего не делаем
+                else if (SecurityContextHolder.getContext().getAuthentication() != null) {
+                     logger.trace("User already authenticated, skipping JWT authentication setting.");
+                }
             }
-        } 
+            else {
+                if (!StringUtils.hasText(jwt)) {
+                    logger.debug("JWT token is missing from the request.");
+                } else {
+                    // validateToken уже залогировал причину невалидности
+                    logger.debug("JWT token is invalid or expired.");
+                }
+            }
+        }
         catch (Exception ex) {
+            // Ловим все исключения, чтобы гарантировать вызов filterChain.doFilter
+            // и не прерывать обработку запроса из-за ошибки аутентификации
             logger.error("Could not set user authentication in security context", ex);
+            // Очищаем контекст на случай частичной установки аутентификации
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
@@ -134,7 +151,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); // Убираем "Bearer "
         }
-        logger.trace("No JWT token found in Authorization header.");
+        logger.trace("No JWT token found in Authorization header for request URI: {}", request.getRequestURI());
         return null;
     }
 }

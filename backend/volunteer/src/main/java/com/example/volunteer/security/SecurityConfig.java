@@ -71,13 +71,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/verify-email").permitAll()
                 // Swagger
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // Эндпоинт профиля доступен всем аутентифицированным пользователям
+                .requestMatchers(HttpMethod.GET, "/api/profile").authenticated() 
                 // остальные правила…
                 .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
-                .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER")
-                .anyRequest().authenticated()
+                
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "VOLUNTEER") 
+                .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
             )
-        // …existing code…
-        ;
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Добавляем JWT фильтр
+
         return http.build();
     }
 
@@ -103,6 +108,7 @@ public class SecurityConfig {
         return source;
     }
 
+    // ... existing authenticationProvider, authenticationManager, passwordEncoder methods ...
     /**
      * Создает и конфигурирует DaoAuthenticationProvider.
      * Устанавливает UserDetailsService (для загрузки данных пользователя)
