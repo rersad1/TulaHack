@@ -3,6 +3,10 @@ package com.example.volunteer.converter;
 import com.example.volunteer.DTO.TaskDTO;
 import com.example.volunteer.model.Task;
 
+import org.springframework.stereotype.Component;
+
+
+@Component 
 public class TaskConverter {
 
     public static Task dtoToEntity(TaskDTO dto) {

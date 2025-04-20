@@ -1,6 +1,6 @@
 package com.example.volunteer.converter;
 
-import com.example.volunteer.dto.UserInfoDTO;
+import com.example.volunteer.DTO.UserInfoDTO;
 import com.example.volunteer.model.auth.User;
 import org.springframework.stereotype.Component;
 

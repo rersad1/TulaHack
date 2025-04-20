@@ -1,6 +1,6 @@
 package com.example.volunteer.controller;
 
-import com.example.volunteer.dto.UserInfoDTO;
+import com.example.volunteer.DTO.UserInfoDTO;
 import com.example.volunteer.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

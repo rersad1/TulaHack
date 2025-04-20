@@ -1,7 +1,7 @@
 package com.example.volunteer.service;
 
 import com.example.volunteer.converter.UserConverter;
-import com.example.volunteer.dto.UserInfoDTO;
+import com.example.volunteer.DTO.UserInfoDTO;
 import com.example.volunteer.model.auth.User;
 import com.example.volunteer.repository.auth.UserRepository; 
 import lombok.RequiredArgsConstructor;
