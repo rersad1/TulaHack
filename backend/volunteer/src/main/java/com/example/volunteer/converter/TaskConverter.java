@@ -3,14 +3,18 @@ package com.example.volunteer.converter;
 import com.example.volunteer.DTO.TaskDTO;
 import com.example.volunteer.model.Task;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-
-@Component 
+@Component
+@RequiredArgsConstructor
 public class TaskConverter {
 
-    public static Task dtoToEntity(TaskDTO dto) {
-        if (dto == null) return null;
+    private final UserConverter userConverter;
+
+    public Task dtoToEntity(TaskDTO dto) {
+        if (dto == null)
+            return null;
         Task task = new Task();
         task.setId(dto.getId());
         task.setTitle(dto.getTitle());
@@ -26,8 +30,9 @@ public class TaskConverter {
         return task;
     }
 
-    public static TaskDTO entityToDto(Task task) {
-        if (task == null) return null;
+    public TaskDTO entityToDto(Task task) {
+        if (task == null)
+            return null;
         TaskDTO dto = new TaskDTO();
         dto.setId(task.getId());
         dto.setTitle(task.getTitle());
@@ -40,6 +45,9 @@ public class TaskConverter {
         dto.setUserEmail(task.getUserEmail());
         dto.setRating(task.getRating());
         dto.setUserComment(task.getUserComment());
+        if (task.getAssignedVolunteer() != null) {
+            dto.setAssignedVolunteer(userConverter.entityToDto(task.getAssignedVolunteer()));
+        }
         return dto;
     }
 }
