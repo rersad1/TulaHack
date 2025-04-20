@@ -73,7 +73,9 @@ public class SecurityConfig {
                 // Swagger
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 // Эндпоинт профиля доступен всем аутентифицированным пользователям
-                .requestMatchers(HttpMethod.GET, "/api/profile").authenticated() 
+                .requestMatchers(HttpMethod.GET, "/api/profile").authenticated()
+                // Разрешить создание задачи (POST /api/tasks) для аутентифицированных пользователей
+                .requestMatchers(HttpMethod.POST, "/api/tasks").authenticated()
                 // остальные правила…
                 .requestMatchers("/api/volunteers/**").hasRole("VOLUNTEER")
                 .requestMatchers("/api/tasks/**").hasAnyRole("USER","VOLUNTEER")
