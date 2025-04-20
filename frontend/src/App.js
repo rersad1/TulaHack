@@ -7,6 +7,8 @@ import UserDashboard from './pages/UserDashboard'; // Import the new User Dashbo
 import VolunteerDashboard from './pages/VolunteerDashboard'; // Import Volunteer Dashboard
 import Home from './pages/Home'; // This is now the Role Selection page
 import LandingPage from './pages/LandingPage'; // Import the new Landing Page
+import Profile from './pages/Profile'; // Import Profile page
+import CreateRequestForm from './pages/CreateRequestForm'; // Импортируем новую форму
 
 function App() {
     const navigate = useNavigate();
@@ -38,14 +40,6 @@ function App() {
         }
     }, [accessToken, location.pathname, navigate, dashboardPath, userRole]); // userRole добавлен в зависимости, чтобы useEffect перезапускался при его изменении
 
-    const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userRole'); // Remove role on logout
-        navigate('/'); // Navigate to landing page on logout
-        window.location.reload();
-    };
-
     return (
         <div>
             {/* Simple Nav - Can be replaced by LandingPage's header if needed */}
@@ -64,7 +58,8 @@ function App() {
                             <Link to={dashboardPath} className="text-[#111418] text-sm font-medium leading-normal mr-4">
                                 {userRole === 'VOLUNTEER' ? 'Панель волонтера' : 'Моя панель'}
                             </Link>
-                            <button onClick={handleLogout} className="text-[#111418] text-sm font-medium leading-normal">Выход</button>
+                            {/* Link to Profile */}
+                            <Link to="/profile" className="text-[#111418] text-sm font-medium leading-normal mr-4">Профиль</Link>
                         </>
                     )}
                 </div>
@@ -87,6 +82,14 @@ function App() {
                 <Route
                     path="/volunteer-dashboard"
                     element={accessToken ? <VolunteerDashboard /> : <Navigate to="/login" replace />}
+                />
+                <Route
+                    path="/profile"
+                    element={accessToken ? <Profile /> : <Navigate to="/login" replace />}
+                />
+                <Route
+                    path="/create-request"
+                    element={accessToken ? <CreateRequestForm /> : <Navigate to="/login" replace />}
                 />
 
                 {/* Catch-all Redirect */}
