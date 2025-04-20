@@ -1,21 +1,23 @@
 package com.bubla.model;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "ChatRoom")
+@Entity
+@Table(name = "chat_room")
 public class ChatRoom {
     @Id
     private String id;
+    @NonNull
     private String chatId;
-    private String senderid;
-    private String recepientId;
+    @NonNull
+    private String senderId;
+    @NonNull
+    private String recipientId;
 }
